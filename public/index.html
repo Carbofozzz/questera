@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questera — Quest Platform powered by GenLayer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo" aria-label="Questera">
+        <img src="img/logo.png" alt="Questera" />
+      </a>
+
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Открыть меню" />
+      <label for="nav-toggle" class="burger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="nav" aria-label="Основное меню">
+        <a href="/" class="nav__link">Home</a>
+        <a href="/create" class="nav__link">Create Quest</a>
+        <a href="/faq" class="nav__link">How It Works</a>
+        <a href="/me" class="nav__link">Portfolio</a>
+      </nav>
+
+      <button class="btn btn--wallet">Connect Wallet</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <h1 class="title">Find a Quest &amp; Earn Rewards</h1>
+      <p class="subtitle">Complete tasks &amp; get automatic payouts</p>
+
+      <section class="toolbar" aria-label="Фильтры">
+        <div class="tabs" role="tablist" aria-label="Статус">
+          <button class="tab tab--active" role="tab" aria-selected="true">Active</button>
+          <button class="tab" role="tab" aria-selected="false">Past</button>
+        </div>
+
+        <div class="toolbar__right">
+          <label class="visually-hidden" for="sort-select">Сортировка</label>
+          <select id="sort-select" class="select">
+            <option selected>Popularity</option>
+            <option>Reward</option>
+            <option>Date</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=80"
+              alt="Social Media Engagement"
+            />
+            <span class="status status--active">✓</span>
+          </div>
+
+          <h3 class="card__title">Social Media Engagement</h3>
+          <p class="card__desc">Complete social tasks and get verified reward payouts.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 50 USDT</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1000&q=80"
+              alt="Product Feedback Survey"
+            />
+            <span class="status status--past">✓</span>
+          </div>
+
+          <h3 class="card__title">Product Feedback Survey</h3>
+          <p class="card__desc">Share your feedback and receive escrow-protected payments.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 25 USDT</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1000&q=80"
+              alt="Content Creation Challenge"
+            />
+            <span class="status status--past">✓</span>
+          </div>
+
+          <h3 class="card__title">Content Creation Challenge</h3>
+          <p class="card__desc">Create branded content and get instant payout after review.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 75 USDT</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__row">
+      <p>© 2026 Questera. All rights reserved.</p>
+      <p>Questera — quest platform with escrow payouts powered by GenLayer.</p>
+    </div>
+  </footer>
+</body>
+</html>
