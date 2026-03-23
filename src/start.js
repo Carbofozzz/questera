@@ -56,6 +56,14 @@ app.get('/faq', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/faq.html'));
 });
 
+app.get('/me', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/me.html'));
+});
+
+app.get('/create', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/create.html'));
+});
+
 app.get('/quest/:id', async (req, res) => {
   try {
     res.set('Content-Type', 'text/html; charset=utf-8');
