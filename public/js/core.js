@@ -6,7 +6,7 @@ import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethe
 let client = null;
 let inited = false;
 
-let contractQuests = '0x98e2797FB846fFf75BF5790681d52C80C1259e48';
+let contractQuests = '0x799FbF3f9C7D40F19522555a119c58433A45decE';
 
 const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
 const BASE_SEPOLIA_USDC= "0x036CbD53842c5426634e7929541eC2318f3dCF7e";

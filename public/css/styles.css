@@ -872,6 +872,31 @@
     accent-color: #2f9eff;
   }
   
+  .upload-box__preview {
+    display: block;
+    width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 2px solid #ddd;
+    border-top-color: #0366d6;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
   .upload-box {
     min-height: 108px;
     border: 1px dashed #bfc8d7;

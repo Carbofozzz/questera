@@ -1,3 +1,7 @@
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 export const bradburyNetwork = {
     chainIdHex: '0x107D',
     chainName: 'GenLayer Bradbury',
@@ -21,3 +25,7 @@ export const baseSepoliaNetwork = {
     },
     blockExplorerUrls: ('https://etherscan.io').split(','),
 };
+
+export function getPrivateKey() {
+    return process.env.PRIVATE_KEY || "";
+  }
