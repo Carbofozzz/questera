@@ -86,15 +86,90 @@ async function connectWalletAndEnsureNetwork(){
 function setUIConnected(address) {
     const addr = document.getElementById('addr'); if (addr) addr.textContent = maskAddress(address);
     const btn = document.getElementById('connectBtn'); if (btn) { btn.textContent = 'Disconnect'; btn.dataset.state = 'connected'; }
-    const blockOut = document.getElementById('logoutContainer'); if (blockOut) { blockOut.classList.add('hidden'); }
-    const blockIn = document.getElementById('loginContainer'); if (blockIn) { blockIn.classList.remove('hidden'); }
+    const cards = document.getElementById('sectionCards'); if (cards) { cards.innerHTML = ''; }
+    setSectionsLocked(false);
 }
 
 function setUIDisconnected() {
     const addr = document.getElementById('addr'); if (addr) addr.textContent = '';
     const btn = document.getElementById('connectBtn'); if (btn) { btn.textContent = 'Connect wallet'; btn.dataset.state = 'disconnected'; }
-    const blockOut = document.getElementById('logoutContainer'); if (blockOut) { blockOut.classList.remove('hidden'); }
-    const blockIn = document.getElementById('loginContainer'); if (blockIn) { blockIn.classList.add('hidden'); }
+    const cards = document.getElementById('sectionCards'); if (cards) { 
+        cards.innerHTML = `
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=80"
+              alt="Social Media Engagement"
+            />
+            <span class="status status--active">✓</span>
+          </div>
+
+          <h3 class="card__title">Social Media Engagement</h3>
+          <p class="card__desc">Complete social tasks and get verified reward payouts.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 50 USDC</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1000&q=80"
+              alt="Product Feedback Survey"
+            />
+            <span class="status status--past">✓</span>
+          </div>
+
+          <h3 class="card__title">Product Feedback Survey</h3>
+          <p class="card__desc">Share your feedback and receive escrow-protected payments.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 25 USDC</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+
+        <article class="card">
+          <div class="card__cover-wrap">
+            <img
+              class="card__cover"
+              src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1000&q=80"
+              alt="Content Creation Challenge"
+            />
+            <span class="status status--past">✓</span>
+          </div>
+
+          <h3 class="card__title">Content Creation Challenge</h3>
+          <p class="card__desc">Create branded content and get instant payout after review.</p>
+
+          <div class="card__meta">
+            <span class="price"><span class="price__icon">$</span> 75 USDC</span>
+            <span class="stars">★ ★ ☆</span>
+          </div>
+
+          <button class="btn btn--open">Open Quest</button>
+        </article>
+        `; 
+    }
+    setSectionsLocked(true);
+}
+
+function setSectionsLocked(locked) {
+    const ids = ['sectionToolbar', 'sectionCards'];
+    ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.toggle('is-locked', locked);
+        el.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    });
 }
 
 async function disconnect() {

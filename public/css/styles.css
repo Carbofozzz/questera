@@ -96,6 +96,27 @@
   .main {
     padding: 34px 0 48px;
   }
+
+  .lockable {
+    position: relative;
+  }
+
+  .lockable.is-locked {
+    pointer-events: none;
+    user-select: none;
+    filter: saturate(0.6);
+  }
+  
+  .lockable.is-locked::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(15, 18, 28, 0.22);
+    backdrop-filter: blur(10px) saturate(0.8);
+    -webkit-backdrop-filter: blur(10px) saturate(0.8);
+    z-index: 5;
+  }
   
   .title {
     margin: 0 0 6px;
