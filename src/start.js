@@ -5,12 +5,24 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AWS from 'aws-sdk';
-import { bradburyNetwork, baseSepoliaNetwork, getPrivateKey } from './config/network.js';
+import { 
+  bradburyNetwork, 
+  baseSepoliaNetwork, 
+  getPrivateKey, 
+  getBaseRpcUrl, 
+  getBaseBridgeIn, 
+  getBaseBridgeOut,
+  getBaseUSDC,
+  getBradburyBridgeIn,
+  getBradburyBridgeOut
+} from './config/network.js';
 import sharp from 'sharp';
 import { ethers } from "ethers";
+import { readFileSync } from 'fs';
 import { createAccount, createClient } from "genlayer-js";
 import { testnetBradbury } from "genlayer-js/chains";
 import { TransactionStatus } from 'genlayer-js/types';
+import EscrowArtifact from '../contracts/artifacts/escrow.json' with { type: 'json' };
 
 dotenv.config();
 
@@ -37,8 +49,21 @@ const s3 = new AWS.S3({
   signatureVersion: 'v4'
 });
 
-// initialize GenLayer client
 const privateKey = getPrivateKey();
+
+// initialize base client
+const baseProvider = new ethers.JsonRpcProvider(getBaseRpcUrl());
+const baseWallet = new ethers.Wallet(getPrivateKey(), baseProvider);
+const escrowFactory = new ethers.ContractFactory(
+  EscrowArtifact.abi,
+  EscrowArtifact.bytecode,
+  baseWallet
+);
+const escrowAbi = [
+  "function setIcContract(address _icContract)"
+];
+
+// initialize GenLayer client
 const account = createAccount(`0x${privateKey.replace(/^0x/, "")}`);
 const genLayerClient = createClient({
   chain: testnetBradbury,
@@ -145,31 +170,47 @@ app.post('/api/create', async (req, res) => {
     const s3UploadResult = await s3.upload(params).promise();
     const s3Url = s3UploadResult.Location;
 
-    const transactionHash = await genLayerClient.writeContract({
-      address: '0x799FbF3f9C7D40F19522555a119c58433A45decE',
-      functionName: 'add_quest',
-      args: [creator.trim(), creator.trim(), title.trim(), desc.trim(), s3Url, expirationTimestamp, rewardPool], 
-    });
-    console.log("transactionHash", transactionHash);
-    const receipt = await genLayerClient.waitForTransactionReceipt({
-      hash: transactionHash,
-      status: TransactionStatus.ACCEPTED,
-      retries: 200,
-      interval: 5000,
-    });
-     
-    console.log('Transaction confirmed:', receipt);
+    // deploy escrow
+    const escrowContract = await escrowFactory.deploy(creator, getBaseUSDC(), getBaseBridgeIn(), getBaseBridgeOut(), rewardPool, expirationTimestamp);
+    await escrowContract.waitForDeployment();
+    const escrowAddress = await escrowContract.getAddress();
+    console.log('Escrow deployed on Base:', escrowAddress);
+    // deploy quest
+    const quest = await deployContract(getBradburyBridgeIn(), getBradburyBridgeOut(), creator, escrowAddress, title.trim(), desc.trim(), s3Url, "", expirationTimestamp, rewardPool);
+    console.log('Quest deployed on Bradbury:', quest);
+    
+    if (quest) {
+      // add quest to escrow
+      const contractWrite = new ethers.Contract(escrowAddress, escrowAbi, baseWallet);
+      const tx = await contractWrite.setIcContract(quest);
+      await tx.wait();
+      console.log("Escrow updated:", tx.hash);
+      // add quest to bd
+      const transactionHash = await genLayerClient.writeContract({
+        address: '0x799FbF3f9C7D40F19522555a119c58433A45decE',
+        functionName: 'add_quest',
+        args: [creator.trim(), quest, title.trim(), desc.trim(), s3Url, expirationTimestamp, rewardPool], 
+      });
+      console.log("Add quest tx on Bradbury", transactionHash);
+      const receiptB = await genLayerClient.waitForTransactionReceipt({
+        hash: transactionHash,
+        status: TransactionStatus.ACCEPTED,
+        retries: 200,
+        interval: 5000,
+      });
+    
+      console.log('Quest added on Bradbury:', receiptB);
 
-
-    return res.json({
-      id,
-      url: s3Url,
-      title: title.trim(),
-      desc: desc.trim(),
-      creator: creator.trim(),
-      pool: rewardPool,
-      date: expirationTimestamp
-    });
+      return res.json({
+        id,
+        url: s3Url,
+        quest: quest,
+        escrow: escrowAddress
+      });
+    } else {
+      return res.status(500).json({ error: 'Error adding a quest' });
+    }
+    
   } catch (e) {
     console.error('Error creating a quest:', e);
     return res.status(500).json({ error: 'Error creating a quest' });
@@ -185,4 +226,23 @@ function getCatPage(req) {
   <html lang="en">
 
   </html>`
+}
+
+async function deployContract(bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
+  const contractCode = readFileSync('./contracts/quest.py', 'utf-8');
+  
+  const hash = await genLayerClient.deployContract({
+    code: contractCode,
+    args: [bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool],
+    leaderOnly: false,
+  });
+  console.log('Quest tx on Bradbury:', hash);
+  const receipt = await genLayerClient.waitForTransactionReceipt({
+    hash,
+    status: TransactionStatus.ACCEPTED,
+    retries: 200,
+    interval: 5000,
+  });
+  console.log('Quest receipt data on Bradbury:', receipt.txDataDecoded);
+  return receipt.txDataDecoded?.contractAddress;
 }

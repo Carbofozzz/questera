@@ -28,4 +28,28 @@ export const baseSepoliaNetwork = {
 
 export function getPrivateKey() {
     return process.env.PRIVATE_KEY || "";
-  }
+}
+
+export function getBaseRpcUrl() {
+    return process.env.BASE_SEPOLIA_RPC_URL || "";
+}
+
+export function getBaseBridgeIn() {
+    return process.env.EVM_BRIDGE_IN || "";
+}
+
+export function getBaseBridgeOut() {
+    return process.env.EVM_BRIDGE_OUT || "";
+}
+
+export function getBaseUSDC() {
+    return process.env.BASE_SEPOLIA_USDC || "";
+}
+
+export function getBradburyBridgeIn() {
+    return process.env.EVM_BRIDGE_IN || "";
+}
+
+export function getBradburyBridgeOut() {
+    return process.env.EVM_BRIDGE_OUT || "";
+}

@@ -15,7 +15,6 @@ class Quest:
     image: str
     end_date: str
     pool: u256
-    is_active: bool
 
     def to_dict(self):
         return {
@@ -25,8 +24,7 @@ class Quest:
             "desc": self.desc,
             "image": self.image,
             "end_date": self.end_date,
-            "pool": str(self.pool),
-            "is_active": str(self.is_active)
+            "pool": str(self.pool)
         }
 
 class Quests(gl.Contract):
@@ -72,18 +70,9 @@ class Quests(gl.Contract):
             desc = desc,
             image = image,
             end_date = str(end_date / 1000),
-            pool = u256(pool),
-            is_active = False
+            pool = u256(pool)
         )
         self.quests[quest_contract] = quest
-
-    @gl.public.write
-    def activate_quest(self, contract: str):
-        self._only_admin()
-        quest_contract = Address(contract)
-        quest = self.quests.get(quest_contract, None)
-        if quest is not None:
-            quest.is_active = True
 
     @gl.public.view
     def get_quests_pool(self, limit: int) -> str:
