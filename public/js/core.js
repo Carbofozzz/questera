@@ -19,6 +19,17 @@ const erc20Abi = [
     "function approve(address spender, uint256 amount) returns (bool)"
 ];
 
+const escrowAbi = [
+    "function fund()",
+    "function claimWinner()",
+    "function claimRefund()",
+    "function claimableAmount(address user) external view returns (uint256)",
+    "function winnersCount() external view returns (uint256)",
+    "function poolAmount() external view returns (uint256)",
+    "function funded() external view returns (bool)",
+    "function refunded() external view returns (bool)"
+];
+
 function maskAddress(a){ if(!a) return ''; return a.slice(0,5)+'…'+a.slice(-4); }
 
 function fmt(t){
@@ -102,7 +113,6 @@ function setUIDisconnected() {
               src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=80"
               alt="Social Media Engagement"
             />
-            <span class="status status--active">✓</span>
           </div>
 
           <h3 class="card__title">Social Media Engagement</h3>
@@ -123,7 +133,6 @@ function setUIDisconnected() {
               src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1000&q=80"
               alt="Product Feedback Survey"
             />
-            <span class="status status--past">✓</span>
           </div>
 
           <h3 class="card__title">Product Feedback Survey</h3>
@@ -144,7 +153,6 @@ function setUIDisconnected() {
               src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1000&q=80"
               alt="Content Creation Challenge"
             />
-            <span class="status status--past">✓</span>
           </div>
 
           <h3 class="card__title">Content Creation Challenge</h3>
@@ -276,5 +284,6 @@ export {
     checkBaseSepolia,
     getUSDCBalance,
     getUSDC,
+    escrowAbi,
     ethers
 };

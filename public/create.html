@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Questera — How It Works</title>
+  <title>Questera — Creating a quest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -19,7 +19,7 @@
         <img src="/img/logo.png" alt="Questera" />
       </a>
 
-      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Открыть меню" />
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Open menu" />
       <label for="nav-toggle" class="burger" aria-hidden="true">
         <span></span><span></span><span></span>
       </label>
@@ -50,6 +50,11 @@
           <div class="form-field">
             <label class="form-label" for="q-desc">Description</label>
             <textarea id="q-desc" name="description" class="form-textarea" placeholder="Detailed conditions for completing the quest..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="q-prompt">Prompt</label>
+            <textarea id="q-prompt" name="description" class="form-textarea" placeholder="Detailed prompt for creating the quest. For example: 5 brave penguins set out to search for a lost city in Tibet. Their goal is to find an ancient manuscript containing a spell to prevent the melting of Antarctica's snow caps..."></textarea>
           </div>
 
           <div class="form-field">
@@ -128,16 +133,18 @@
         try {
             const title = String(document.getElementById('q-title')?.value || '').trim();
             const desc = String(document.getElementById('q-desc')?.value || '').trim();
+            const prompt = String(document.getElementById('q-prompt')?.value || '').trim();
             const pool = Number(document.getElementById('q-reward')?.value || 0);
             const dateValue = String(document.getElementById('q-date')?.value || '');
 
             if (!title) throw new Error('Title is required');
             if (!desc) throw new Error('Description is required');
+            if (!prompt) throw new Error('Prompt is required');
             if (!Number.isFinite(pool) || pool <= 0) throw new Error('Reward must be greater than 0');
             if (!dateValue) throw new Error('End date is required');
             if (!selectedDataUrl) throw new Error('Image is required');
 
-            WalletUI.createQuest(title, desc, selectedDataUrl, pool, dateValue);
+            WalletUI.createQuest(title, desc, prompt, selectedDataUrl, pool, dateValue);
         } catch (error) {
             console.error('[Quests] Create quest error:', error);
             alert(error.message || 'Failed to create quest');

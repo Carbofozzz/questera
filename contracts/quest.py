@@ -340,6 +340,7 @@ This result should be perfectly parsable by a JSON parser without errors.
             if state is None:
                 return json.dumps({
                 "creator": self.creator.as_hex,
+                "escrow": self.escrow,
                 "title": self.title,
                 "desc": self.desc,
                 "image": self.image,
@@ -349,6 +350,7 @@ This result should be perfectly parsable by a JSON parser without errors.
             })
             return json.dumps({
                 "creator": self.creator.as_hex,
+                "escrow": self.escrow,
                 "title": self.title,
                 "desc": self.desc,
                 "image": self.image,

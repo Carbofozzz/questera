@@ -93,7 +93,7 @@ app.get('/api/config/network_base_sepolia', (_req, res) => {
 app.get('/quest/:id', async (req, res) => {
   try {
     res.set('Content-Type', 'text/html; charset=utf-8');
-    return res.send(getCatPage(req));
+    return res.send(getQuestPage(req));
   } catch(e) {
     return res.status(500).send('Failed to load quest', e);
   }
@@ -119,12 +119,15 @@ app.get('/', (_req, res) => {
 // api
 app.post('/api/create', async (req, res) => {
   try {
-    const { image, title, desc, creator, date, pool } = req.body || {};
+    const { image, title, desc, prompt, creator, date, pool } = req.body || {};
     if (typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ error: 'Invalid title' });
     }
     if (typeof desc !== 'string' || !desc.trim()) {
       return res.status(400).json({ error: 'Invalid description' });
+    }
+    if (typeof prompt !== 'string' || !prompt.trim()) {
+      return res.status(400).json({ error: 'Invalid prompt' });
     }
     if (typeof creator !== 'string' || !creator.trim()) {
       return res.status(400).json({ error: 'Invalid creator' });
@@ -176,7 +179,7 @@ app.post('/api/create', async (req, res) => {
     const escrowAddress = await escrowContract.getAddress();
     console.log('Escrow deployed on Base:', escrowAddress);
     // deploy quest
-    const quest = await deployContract(getBradburyBridgeIn(), getBradburyBridgeOut(), creator, escrowAddress, title.trim(), desc.trim(), s3Url, "", expirationTimestamp, rewardPool);
+    const quest = await deployContract(getBradburyBridgeIn(), getBradburyBridgeOut(), creator, escrowAddress, title.trim(), desc.trim(), s3Url, prompt.trim(), expirationTimestamp, rewardPool);
     console.log('Quest deployed on Bradbury:', quest);
     
     if (quest) {
@@ -208,7 +211,7 @@ app.post('/api/create', async (req, res) => {
         escrow: escrowAddress
       });
     } else {
-      return res.status(500).json({ error: 'Error adding a quest' });
+      return res.status(400).json({ error: 'Error adding a quest' });
     }
     
   } catch (e) {
@@ -221,11 +224,124 @@ app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
 
-function getCatPage(req) {
+function getQuestPage(req) {
   return `<!doctype html>
-  <html lang="en">
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questera — Quest Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body data-page-name="quest" data-quest-id="${req.params.id}">
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo" aria-label="Questera">
+        <img src="/img/logo.png" alt="Questera" />
+      </a>
 
-  </html>`
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Open menu" />
+      <label for="nav-toggle" class="burger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="nav" aria-label="Основное меню">
+          <a href="/" class="nav__link">Home</a>
+        <a href="/create" class="nav__link">Create Quest</a>
+        <a href="/faq" class="nav__link">How It Works</a>
+        <a href="/me" class="nav__link">Portfolio</a>
+      </nav>
+
+      <button id="connectBtn" class="btn btn--wallet">Connect Wallet</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <section class="quest-page" aria-label="Quest details">
+        <div id="questLoader" class="quest-loader">
+          <div class="quest-loader__bar"></div>
+          <p>Loading quest...</p>
+        </div>
+
+          <article id="questContent" class="quest-main card hidden">
+            <div class="quest-main__top">
+              <div>
+                <h1 id="questTitle" class="quest-main__title">Loading...</h1>
+                <p class="quest-main__date">Expiration: <span id="questDate">—</span></p>
+              </div>
+              <span id="statusCheck" class="quest-check" aria-label="Quest active">✓</span>
+            </div>
+
+            <div class="quest-hero">
+              <img id="questImage" src="" alt="Quest image" class="quest-hero__img" />
+            </div>
+
+            <p id="questDesc" class="quest-main__desc"></p>
+
+            <div id="questInputWrap" class="quest-input-wrap">
+              <textarea
+                class="quest-input"
+                placeholder="Write your answer or attach proof..."
+                aria-label="Quest input"
+              ></textarea>
+              <button class="quest-input__clear" aria-label="Clear">×</button>
+            </div>
+            <div id="questBtns" class="form-actions">
+              <button id="startBtn" class="btn btn--open">Start quest</button>
+              <button id="answerBtn" class="btn btn--open">Answer quest</button>
+              <div id="startProgress" class="spinner hidden" aria-label="Loading"></div>
+            </div>
+          </article>
+
+          <aside id="questContentSide" class="quest-side card hidden" aria-label="Quest stats">
+            <h2 class="quest-side__title">Prize Pool</h2>
+
+            <div class="quest-side__amount">
+              <div>
+                <div id="poolTotal" class="quest-side__value">0 USDC</div>
+                <div id="poolComment" class="quest-side__sub"></div>
+                <div id="poolAction" class="quest-side__action hidden"></div>
+              </div>
+            </div>
+
+            <div class="quest-side__row">
+              <div>
+                <div id="playerTotal" class="quest-side__label">0</div>
+                <div class="quest-side__sub">Winner(s)</div>
+              </div>
+            </div>
+
+            <ul class="quest-steps">
+              <li class="quest-steps__item">
+                <span class="quest-steps__dot quest-steps__dot--violet"></span>
+                <div>
+                  <div class="quest-steps__name">Your reward</div>
+                  <div id="playerReward" class="quest-steps__meta">O USDC</div>
+                </div>
+              </li>
+            </ul>
+          </aside>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__row">
+      <p>© 2026 Questera. All rights reserved.</p>
+      <p>Questera — quest platform with escrow payouts powered by GenLayer.</p>
+    </div>
+  </footer>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
+`
 }
 
 async function deployContract(bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
