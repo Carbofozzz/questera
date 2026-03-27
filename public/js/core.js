@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/genlayer-js";
 import { testnetBradbury } from "https://esm.sh/genlayer-js/chains";
-import { TransactionStatus } from "https://esm.sh/genlayer-js/types";
+import { TransactionStatus, ExecutionResult } from "https://esm.sh/genlayer-js/types";
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.esm.min.js";
 
 let client = null;
@@ -267,6 +267,7 @@ function requireConnectedOnLoad(){
 export {
     client,
     TransactionStatus,
+    ExecutionResult,
     contractQuests,
     maskAddress,
     getAddress,

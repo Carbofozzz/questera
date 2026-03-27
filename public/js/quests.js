@@ -1,6 +1,7 @@
 import {
     client,
     TransactionStatus,
+    ExecutionResult,
     contractQuests,
     getAddress,
     escrowAbi,
@@ -42,7 +43,8 @@ function normalizeQuest(q) {
         ...q,
         endSec,
         poolNum: toNumber(q.pool),
-        isActiveBool: String(q.is_active).toLowerCase() === 'true'
+        isActiveBool: String(q.is_active).toLowerCase() === 'true',
+        isCompletedBool: q.state && String(q.state.is_completed).toLowerCase() === 'true'
     };
 }
 
@@ -196,6 +198,14 @@ async function getQuest(id) {
     const imageEl = document.getElementById('questImage');
     const checkEl = document.getElementById('statusCheck');
     const poolTotalEl = document.getElementById('poolTotal');
+    const startBtn = document.getElementById('startBtn');
+    const answerBtn = document.getElementById('answerBtn');
+    const startProgress = document.getElementById('startProgress');
+    const narrationEl = document.getElementById('narration');
+    const taskEl = document.getElementById('task');
+    const commentEl = document.getElementById('comment');
+    const area = document.getElementById('q-answer');
+    const questImg = document.getElementById('questImg');
 
     const inputWrap = document.getElementById('questInputWrap');
     const submitBtn = document.getElementById('questBtns');
@@ -215,6 +225,12 @@ async function getQuest(id) {
     showLoading();
 
     try {
+        const logs = await client.readContract({
+            address: id,
+            functionName: "get_log",
+            args: [],
+        });
+        console.log('[Quest] Success getting logs:', logs);
         const game = await client.readContract({
             address: id,
             functionName: "get_my_quest",
@@ -238,13 +254,48 @@ async function getQuest(id) {
         if (poolTotalEl) poolTotalEl.textContent = q.pool + ' USDC';
 
         if (isDisabled) {
+            if (questImg) questImg.classList.remove('hidden');
+            if (narrationEl) narrationEl.classList.add('hidden');
+            if (taskEl) taskEl.classList.add('hidden');
+            if (commentEl) commentEl.classList.add('hidden');
             if (inputWrap) inputWrap.classList.add('hidden');
             if (submitBtn) submitBtn.classList.add('hidden');
             if (checkEl) checkEl.classList.add('quest-check--past');
             if (checkEl) checkEl.classList.remove('quest-check--active');
         } else {
-            if (inputWrap) inputWrap.classList.remove('hidden');
-            if (submitBtn) submitBtn.classList.remove('hidden');
+            const state = q.state;
+            if (startProgress) startProgress.classList.add('hidden');
+            if (state) {
+                if (q.isCompletedBool) {
+                    if (inputWrap) inputWrap.classList.add('hidden');
+                    if (questImg) questImg.classList.remove('hidden');
+                } else {
+                    if (inputWrap) inputWrap.classList.remove('hidden');
+                    if (questImg) questImg.classList.add('hidden');
+                }
+                if (answerBtn) answerBtn.classList.remove('hidden');
+                if (startBtn) startBtn.classList.add('hidden');
+                if (narrationEl) narrationEl.classList.remove('hidden');
+                if (taskEl) taskEl.classList.remove('hidden');
+                if (commentEl) commentEl.classList.remove('hidden');
+                if (narrationEl) narrationEl.textContent = state.last_narration
+                if (taskEl) taskEl.textContent = state.last_task_summary
+                if (commentEl) commentEl.textContent = state.last_comment
+                if (area) area.value=''; 
+            } else {
+                if (questImg) questImg.classList.remove('hidden');
+                if (startBtn) startBtn.classList.remove('hidden');
+                if (answerBtn) answerBtn.classList.add('hidden');
+                if (inputWrap) inputWrap.classList.add('hidden');
+                if (narrationEl) narrationEl.classList.add('hidden');
+                if (taskEl) taskEl.classList.add('hidden');
+                if (commentEl) commentEl.classList.add('hidden');
+            }
+            if (q.isCompletedBool) {
+                if (submitBtn) submitBtn.classList.add('hidden');
+            } else {
+                if (submitBtn) submitBtn.classList.remove('hidden');
+            }
             if (checkEl) checkEl.classList.remove('quest-check--past');
             if (checkEl) checkEl.classList.add('quest-check--active');
         }
@@ -257,9 +308,75 @@ async function getQuest(id) {
     }
 }
 
+async function startQuest() {
+    if (!client) return;
+    const startBtn = document.getElementById('startBtn');
+    const startProgress = document.getElementById('startProgress');
+    if (startBtn) startBtn.classList.add('hidden');
+    if (startProgress) startProgress.classList.remove('hidden');
+    try {
+        checkGenlayerBradbury();
+        const txHash = await client.writeContract({
+            address: document.body.dataset.questId,
+            functionName: "start",
+            args: [],
+        });
+        console.error('[Quest] Success tx start quest:', txHash);
+        const receipt = await client.waitForTransactionReceipt({
+            hash: txHash,
+            status: TransactionStatus.ACCEPTED,
+            retries: 200,
+            interval: 5000,
+        });
+        console.error('[Quest] Success start quest:', receipt);
+    } catch(error) {
+        console.error('[Quest] Error start quest:', error);
+    } finally {
+        getQuest(document.body.dataset.questId);
+    }
+}
+
+async function answerQuest(answer) {
+    if (!client) return;
+    const answerBtn = document.getElementById('answerBtn');
+    const startProgress = document.getElementById('startProgress');
+    if (answerBtn) answerBtn.classList.add('hidden');
+    if (startProgress) startProgress.classList.remove('hidden');
+    try {
+        checkGenlayerBradbury();
+        const txHash = await client.writeContract({
+            address: document.body.dataset.questId,
+            functionName: "answer",
+            args: [answer],
+        });
+        console.error('[Quest] Success tx answer quest:', txHash);
+        const receipt = await client.waitForTransactionReceipt({
+            hash: txHash,
+            status: TransactionStatus.ACCEPTED,
+            retries: 200,
+            interval: 5000,
+        });
+        if (receipt.txExecutionResultName === ExecutionResult.FINISHED_WITH_RETURN) {
+            // Execution succeeded — safe to read state
+                
+        } else if (receipt.txExecutionResultName === ExecutionResult.FINISHED_WITH_ERROR) {
+            // Execution failed — contract state was not modified
+            console.error("[Quest] Contract execution failed");
+        } else {
+            // NOT_VOTED — execution hasn't completed
+            console.warn("[Quest] Execution result not yet available");
+        }
+        console.log('[Quest] Success answer quest:', receipt.txExecutionResultName);
+    } catch(error) {
+        console.error('[Quest] Error answer quest:', error);
+    } finally {
+        getQuest(document.body.dataset.questId);
+    }
+}
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
+}
 
 async function checkEscrow(escrow, creator, isExpired) {
     const participantsEl = document.getElementById('playerTotal');
@@ -304,7 +421,7 @@ async function checkEscrow(escrow, creator, isExpired) {
         } else if (!funded) {
             if (poolCommentEl) poolCommentEl.textContent = 'The deposit period has expired';
         } else if (!isExpired) {
-            if (poolCommentEl) poolCommentEl.textContent = 'Become available after the quest is completed';
+            if (poolCommentEl) poolCommentEl.textContent = 'The funds have been reserved';
         } else {
             if (participants == 0) {
                 if (poolCommentEl) poolCommentEl.textContent = 'Available for refund';
@@ -376,6 +493,7 @@ async function fundEscrow(gameContract, escrow) {
     if (allowance.lt(amount)) {
         const txApprove = await usdc.approve(escrow, amount);
         await txApprove.wait();
+        await sleep(1000);
     }
 
     const tx = await gameContract.fund();
@@ -466,5 +584,7 @@ async function createQuest(title, desc, prompt, image, pool, dateValue) {
 export { 
     initMain,
     getQuest,
-    createQuest 
+    createQuest,
+    startQuest,
+    answerQuest
 };

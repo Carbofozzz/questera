@@ -47,9 +47,13 @@ export function getBaseUSDC() {
 }
 
 export function getBradburyBridgeIn() {
-    return process.env.EVM_BRIDGE_IN || "";
+    return process.env.IC_BRIDGE_IN || "";
 }
 
 export function getBradburyBridgeOut() {
-    return process.env.EVM_BRIDGE_OUT || "";
+    return process.env.IC_BRIDGE_OUT || "";
+}
+
+export function getRelayer() {
+    return process.env.RELAYER || "";
 }

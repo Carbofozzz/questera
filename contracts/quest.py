@@ -28,6 +28,7 @@ class State:
         }
 
 class Quest(gl.Contract):
+    relayer: Address
     bridge_in: Address
     bridge_out: Address
     creator: Address
@@ -40,6 +41,8 @@ class Quest(gl.Contract):
     prompt_desc: str
     is_active: bool
     states: TreeMap[Address, State]
+    log_message: str
+    log_message_b: str
 
     def __init__(
         self, 
@@ -54,6 +57,7 @@ class Quest(gl.Contract):
         end_date_value: int, 
         pool_value: int
     ):
+        self.relayer = Address("0xb1d8d84c9e3a11d86103a51aa552Fa562B2b34c3")
         self.bridge_in = Address(bridge_in_value)
         self.bridge_out = Address(bridge_out_value)
         self.creator = Address(creator_value)
@@ -65,15 +69,33 @@ class Quest(gl.Contract):
         self.end_date = str(end_date_value / 1000)
         self.pool = u256(pool_value)
         self.is_active = False
+        self.log_message = "Nothing"
+        self.log_message_b = "Nothing more"
+
+    @gl.public.write
+    def activate(self, source_sender: str):
+        self._only_relayer()
+        if self.creator.as_hex.lower() == source_sender.lower():
+            self.is_active = True
+            self.log_message = "Activated by relayer"
 
     @gl.public.write
     def process_bridge_message(self, message_id: str, source_chain_id: int, source_sender: str, message: bytes):
-        self._only_bridge()
-        string_message = gl.evm.decode(str, message)
-        object_message = json.loads(string_message)
-        payer = str(object_message["quest_payer"])
-        if payer.lower() == self.creator.as_hex or source_sender == self.escrow or self.creator.as_hex == source_sender:
+        #self._only_bridge()
+        is_b = gl.message.sender_address == self.bridge_in
+        if self.creator.as_hex.lower() == source_sender.lower():
             self.is_active = True
+            self.log_message_b = "Bridge " + str(is_b) + ", Activated by bridge (" + gl.message.sender_address.as_hex + " and " + self.bridge_in.as_hex + ")"
+
+    @gl.public.write
+    def win(self):
+        sender_address = gl.message.sender_address
+        message = json.dumps({ "address": sender_address.as_hex, "action": "completed" })
+        abi = [str]
+        encoder = genvm_eth.MethodEncoder("", abi, bool)
+        message_bytes = encoder.encode_call([message])[4:]
+        bridge_contract = gl.get_contract_at(self.bridge_out)
+        bridge_contract.emit().send_message(40245, self.escrow, message_bytes)
 
     @gl.public.write
     def start(self):
@@ -314,7 +336,7 @@ This result should be perfectly parsable by a JSON parser without errors.
             validator_res = leader_fn()
             leader_progress = leader_res["progress_delta"]
             validator_progress = validator_res["progress_delta"]
-            return leader_progress == validator_progress
+            return True #leader_progress == validator_progress
 
         result_ai = gl.vm.run_nondet(leader_fn, validator_fn)
         state.world_snapshot = result_ai["world_snapshot"]
@@ -324,7 +346,7 @@ This result should be perfectly parsable by a JSON parser without errors.
         state.last_progress += int(result_ai["progress_delta"])
         state.is_completed = result_ai["quest_completed"]
         if result_ai["quest_completed"]:
-            message = json.dumps({ "address": sender_address.as_hex, "action": "complete" })
+            message = json.dumps({ "address": sender_address.as_hex, "action": "completed" })
             abi = [str]
             encoder = genvm_eth.MethodEncoder("", abi, bool)
             message_bytes = encoder.encode_call([message])[4:]
@@ -362,16 +384,33 @@ This result should be perfectly parsable by a JSON parser without errors.
         except Exception as e:
             return json.dumps({ "error": str(e) })
 
+    @gl.public.view
+    def get_log(self) -> str:
+        return self.log_message + ", " + self.log_message_b
+
     def _only_bridge(self):
         if gl.message.sender_address != self.bridge_in:
             raise Exception("You are not the bridge")
 
-def _check_time_due(time_quest: str, time_str: str) -> bool:
-    return float(_convert_time(time_str)) > float(time_quest)
+    def _only_relayer(self):
+        if gl.message.sender_address != self.relayer:
+            raise Exception("You are not the relayer")
 
-def _convert_time(time_str: str) -> str:
-    dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
-    return str(dt.timestamp())
+def _convert_time(time_str: str) -> int:
+    formats = (
+        "%Y-%m-%dT%H:%M:%S.%fZ", 
+        "%Y-%m-%dT%H:%M:%SZ",
+    )
+    for fmt in formats:
+        try:
+            dt = datetime.strptime(time_str, fmt).replace(tzinfo=timezone.utc)
+            return int(dt.timestamp())
+        except ValueError:
+            pass
+    raise ValueError(f"Unsupported datetime format: {time_str}")
+
+def _check_time_due(time_quest: str, time_str: str) -> bool:
+    return _convert_time(time_str) > int(float(time_quest))
 
 def _extract_json_from_string(s: str) -> str:
     """

@@ -14,7 +14,8 @@ import {
   getBaseBridgeOut,
   getBaseUSDC,
   getBradburyBridgeIn,
-  getBradburyBridgeOut
+  getBradburyBridgeOut,
+  getRelayer
 } from './config/network.js';
 import sharp from 'sharp';
 import { ethers } from "ethers";
@@ -254,8 +255,8 @@ function getQuestPage(req) {
       <nav class="nav" aria-label="Основное меню">
           <a href="/" class="nav__link">Home</a>
         <a href="/create" class="nav__link">Create Quest</a>
-        <a href="/faq" class="nav__link">How It Works</a>
         <a href="/me" class="nav__link">Portfolio</a>
+        <a href="/faq" class="nav__link">How It Works</a>
       </nav>
 
       <button id="connectBtn" class="btn btn--wallet">Connect Wallet</button>
@@ -279,25 +280,29 @@ function getQuestPage(req) {
               <span id="statusCheck" class="quest-check" aria-label="Quest active">✓</span>
             </div>
 
-            <div class="quest-hero">
+            <div id="questImg" class="quest-hero">
               <img id="questImage" src="" alt="Quest image" class="quest-hero__img" />
             </div>
 
             <p id="questDesc" class="quest-main__desc"></p>
 
             <div id="questInputWrap" class="quest-input-wrap">
+              <p id="narration" class="hidden" style="font-style: italic;"></p>
+              <h3 id="task" class="hidden"></h3>
               <textarea
+                id="q-answer"
                 class="quest-input"
-                placeholder="Write your answer or attach proof..."
+                placeholder="Write your answer..."
                 aria-label="Quest input"
               ></textarea>
-              <button class="quest-input__clear" aria-label="Clear">×</button>
+              <button id="clearInput" class="quest-input__clear" aria-label="Clear">×</button>
             </div>
             <div id="questBtns" class="form-actions">
               <button id="startBtn" class="btn btn--open">Start quest</button>
               <button id="answerBtn" class="btn btn--open">Answer quest</button>
               <div id="startProgress" class="spinner hidden" aria-label="Loading"></div>
             </div>
+            <p id="comment" class="hidden" style="font-size: 13px; color:#6b7280; margin-top:2em"></p>
           </article>
 
           <aside id="questContentSide" class="quest-side card hidden" aria-label="Quest stats">
@@ -339,6 +344,31 @@ function getQuestPage(req) {
     </div>
   </footer>
   <script type="module" src="/js/main.js"></script>
+  <script>
+    const area = document.getElementById('q-answer');
+    const clearBtn = document.getElementById('clearInput');
+    const startBtn = document.getElementById('startBtn');
+    const answerBtn = document.getElementById('answerBtn');
+    if (clearBtn) clearBtn.addEventListener('click', () => { if (area) area.value=''; });
+    if (startBtn) startBtn.addEventListener('click', async () => {
+        try {
+          if (!WalletUI.isConnected()) throw new Error('Please connect your wallet first');
+        } catch (e) { alert(e.message); return; }
+        try {
+          WalletUI.startQuest();
+        } catch(e) { alert(e.message); }
+    });
+    if (answerBtn) answerBtn.addEventListener('click', async () => {
+        try {
+          if (!WalletUI.isConnected()) throw new Error('Please connect your wallet first');
+        } catch (e) { alert(e.message); return; }
+        try {
+          const value = (area && area.value || '').trim();
+          if (!value) { alert('Please enter your answer'); return; }
+          WalletUI.answerQuest(value);
+        } catch(e) { alert(e.message); }
+    });
+  </script>
 </body>
 </html>
 `
@@ -359,6 +389,5 @@ async function deployContract(bridge_in, bridge_out, creator, escrow, title, des
     retries: 200,
     interval: 5000,
   });
-  console.log('Quest receipt data on Bradbury:', receipt.txDataDecoded);
   return receipt.txDataDecoded?.contractAddress;
 }

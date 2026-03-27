@@ -16,7 +16,7 @@
     "dotenv": "^17.3.1",
     "ethers": "^6.16.0",
     "express": "^5.2.1",
-    "genlayer-js": "^0.23.1",
+    "genlayer-js": "^0.24.0",
     "morgan": "^1.10.1",
     "sharp": "^0.34.5"
   }
