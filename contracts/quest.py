@@ -81,21 +81,10 @@ class Quest(gl.Contract):
 
     @gl.public.write
     def process_bridge_message(self, message_id: str, source_chain_id: int, source_sender: str, message: bytes):
-        #self._only_bridge()
-        is_b = gl.message.sender_address == self.bridge_in
+        self._only_bridge()
         if self.creator.as_hex.lower() == source_sender.lower():
             self.is_active = True
-            self.log_message_b = "Bridge " + str(is_b) + ", Activated by bridge (" + gl.message.sender_address.as_hex + " and " + self.bridge_in.as_hex + ")"
-
-    @gl.public.write
-    def win(self):
-        sender_address = gl.message.sender_address
-        message = json.dumps({ "address": sender_address.as_hex, "action": "completed" })
-        abi = [str]
-        encoder = genvm_eth.MethodEncoder("", abi, bool)
-        message_bytes = encoder.encode_call([message])[4:]
-        bridge_contract = gl.get_contract_at(self.bridge_out)
-        bridge_contract.emit().send_message(40245, self.escrow, message_bytes)
+            self.log_message_b = "Activated by bridge"
 
     @gl.public.write
     def start(self):
@@ -268,7 +257,8 @@ Assume it is the first turn if last_task_summary and world_snapshot are empty st
     showcasing how the main skill works,  
     with a clear request to the player.
 
-Even on the first turn you MUST still return JSON in the same format with all 5 fields filled. For the first turn you may set progress_delta based on the quality of the intro answer (if present), otherwise you may set it to 0.  
+Even on the first turn you MUST still return JSON in the same format with all fields filled. 
+For the first turn you may set goal_relevance, actionability, contradiction_to_task, explicit_refusal_or_gibberish, and progress_delta based on the quality of the intro answer (if present), otherwise you may set it to 0.  
 
 QUEST COMPLETION RULES
 The quest has 4 progression stages: 0, 1, 2, 3.
@@ -311,8 +301,30 @@ The world_snapshot is 2-5 sentences: where the hero is now, with whom, what they
 The quest_completed field is a boolean indicated passed quest or not.
 If quest_completed is true, any instruction about creating a new task is overridden.
 
+Compute binary score factors (score each field as 0 or 1 only):
+The goal_relevance field, if user_answer directly addresses previous_task_summary objective score 1, else - 0.
+The actionability field, if user_answer contains at least one concrete action/decision score 1, else - 0.
+The contradiction_to_task field, if user_answer clearly opposes or derails previous_task_summary objective score 1, else - 0.
+The explicit_refusal_or_gibberish field, if answer is empty / meaningless / pure refusal / totally off-topic score 1, else - 0.
+
+Then compute progress_delta STRICTLY:
+1) if explicit_refusal_or_gibberish == 1: progress_delta = -1
+2) else if goal_relevance == 1 and actionability == 1 and contradiction_to_task == 0: progress_delta = 1
+3) else if goal_relevance == 0 or contradiction_to_task == 1: progress_delta = -1
+4) else: progress_delta = 0
+
+Tie-break policy:
+- if uncertain between 1 and 0 -> choose 0
+- if uncertain between 0 and -1 -> choose -1
+
+For the first turn you should set al score related fields and progress_delta to 0.
+
 Return a JSON with the name as follows:
 {{
+    "goal_relevance": int,
+    "actionability": int,
+    "contradiction_to_task": int,
+    "explicit_refusal_or_gibberish": int,
     "progress_delta": int,
     "quest_completed": bool,
     "comment": str,
@@ -336,15 +348,19 @@ This result should be perfectly parsable by a JSON parser without errors.
             validator_res = leader_fn()
             leader_progress = leader_res["progress_delta"]
             validator_progress = validator_res["progress_delta"]
-            return True #leader_progress == validator_progress
+            return leader_progress == validator_progress
 
         result_ai = gl.vm.run_nondet(leader_fn, validator_fn)
         state.world_snapshot = result_ai["world_snapshot"]
         state.last_task_summary = result_ai["last_task_summary"]
         state.last_narration = result_ai["narration"]
         state.last_comment = result_ai["comment"]
-        state.last_progress += int(result_ai["progress_delta"])
+        if state.last_progress > 0:
+            state.last_progress += int(result_ai["progress_delta"])
+        if state.last_progress == 0 and int(result_ai["progress_delta"]) >= 0:
+            state.last_progress = int(result_ai["progress_delta"])
         state.is_completed = result_ai["quest_completed"]
+
         if result_ai["quest_completed"]:
             message = json.dumps({ "address": sender_address.as_hex, "action": "completed" })
             abi = [str]

@@ -381,6 +381,7 @@ function sleep(ms) {
 async function checkEscrow(escrow, creator, isExpired) {
     const participantsEl = document.getElementById('playerTotal');
     const poolCommentEl = document.getElementById('poolComment');
+    const rewardEl = document.getElementById('playerReward');
     renderPoolAction();
     try {
         await checkBaseSepolia();
@@ -396,14 +397,19 @@ async function checkEscrow(escrow, creator, isExpired) {
         console.log("[Quest] Pool funded:", funded.toString());
         const refunded = await gameContract.refunded();
         console.log("[Quest] Pool refunded:", refunded.toString());
+        const rewards = await gameContract.claimableAmount(getAddress());
+        console.log("[Quest] User reward:", rewards.toString());
         if (participantsEl) participantsEl.textContent = participants.toString();
         const hasReward = reward.gt(0);
         const owner = ethers.utils.getAddress(creator) === ethers.utils.getAddress(getAddress());
-        console.log("[Quest] User owner:", owner.toString());
-        console.log("[Quest] User creator:", creator);
-        console.log("[Quest] User wallet:", getAddress());
+        console.log("[Quest] Is contract owner:", owner.toString());
+        const usdc = await getUSDC();
+        const decimals = await usdc.decimals();
         if (hasReward) {
-            
+            const rewardFormatted = formatRewardAmount(reward, decimals);
+            if (rewardEl) rewardEl.textContent = `${rewardFormatted} USDC`;
+        } else {
+            if (rewardEl) rewardEl.textContent = '0 USDC';
         }
         if (!funded && !isExpired) {
             if (owner) {
@@ -430,32 +436,58 @@ async function checkEscrow(escrow, creator, isExpired) {
                         text: 'Refund',
                         onClick: async () => {
                             await refundEscrow(gameContract);
-                            await checkEscrow(escrow, creator, isExpired); // рефреш состояния
+                            await checkEscrow(escrow, creator, isExpired);
                         },
                         loadingText: 'Refunding...'
                     });
                 }
             } else {
                 if (poolCommentEl) poolCommentEl.textContent = 'Available for rewards claiming';
+                if (hasReward) {
+                    renderPoolAction({
+                        text: 'Claim',
+                        onClick: async () => {
+                            const tx = await gameContract.claimWinner();
+                            await tx.wait();
+                            await sleep(1000);
+                            await checkEscrow(escrow, creator, isExpired);
+                        },
+                        loadingText: 'Claiming...'
+                    });
+                }
             }
         }
 
-
-        const usdc = await getUSDC();
-        const decimals = await usdc.decimals();
-
-        const contractBalance = await usdc.balanceOf(escrow);
-        
-        console.log("[Quest] USDC contract balance:", contractBalance.toString());
-
-        
     } catch (error) {
         console.error('[Quest] Error in check escrow:', error);
     }
 }
 
+function formatRewardAmount(value, decimals = 6) {
+    const num = Number(
+        ethers.utils.formatUnits(value, decimals)
+    );
+    if (!Number.isFinite(num)) return '0';
+    if (Number.isInteger(num)) return String(num);
+    if (num < 1) {
+        return num.toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 6,
+            useGrouping: false
+        });
+    }
+    return num.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 6,
+        useGrouping: false
+    });
+}
+
 function renderPoolAction({ text, onClick, loadingText = 'Processing...' } = {}) {
-    const root = document.getElementById('poolAction');
+    let root = document.getElementById('poolAction');
+    if (text === 'Claim') {
+        root = document.getElementById('playerAction');
+    }
     if (!root) return;
     root.classList.add('hidden');
     root.innerHTML = '';
