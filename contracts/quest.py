@@ -29,6 +29,7 @@ class State:
 
 class Quest(gl.Contract):
     relayer: Address
+    quests: Address
     bridge_in: Address
     bridge_out: Address
     creator: Address
@@ -46,6 +47,8 @@ class Quest(gl.Contract):
 
     def __init__(
         self, 
+        relayer_value: str, 
+        quests_value: str, 
         bridge_in_value: str, 
         bridge_out_value: str, 
         creator_value: str, 
@@ -57,7 +60,8 @@ class Quest(gl.Contract):
         end_date_value: int, 
         pool_value: int
     ):
-        self.relayer = Address("0xb1d8d84c9e3a11d86103a51aa552Fa562B2b34c3")
+        self.relayer = Address(relayer_value)
+        self.quests = Address(quests_value)
         self.bridge_in = Address(bridge_in_value)
         self.bridge_out = Address(bridge_out_value)
         self.creator = Address(creator_value)
@@ -85,6 +89,15 @@ class Quest(gl.Contract):
         if self.creator.as_hex.lower() == source_sender.lower():
             self.is_active = True
             self.log_message_b = "Activated by bridge"
+            quests_contract = gl.get_contract_at(self.quests)
+            quests_contract.emit().add_quest(
+                self.creator.as_hex,
+                self.title,
+                self.desc,
+                self.image,
+                int(float(self.end_date)) * 1000,
+                int(self.pool)
+            )
 
     @gl.public.write
     def start(self):
@@ -247,6 +260,15 @@ This result should be perfectly parsable by a JSON parser without errors.
             message_bytes = encoder.encode_call([message])[4:]
             bridge_contract = gl.get_contract_at(self.bridge_out)
             bridge_contract.emit().send_message(40245, self.escrow, message_bytes)
+
+        if not answer_text.strip():
+            quests_contract = gl.get_contract_at(self.quests)
+            quests_contract.emit().add_quest_user(
+                self.creator.as_hex,
+                sender_address.as_hex,
+                self.title,
+                int(float(self.end_date)) * 1000
+            )
 
 
     @gl.public.view

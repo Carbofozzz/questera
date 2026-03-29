@@ -15,6 +15,7 @@ import {
   getBaseUSDC,
   getBradburyBridgeIn,
   getBradburyBridgeOut,
+  getBradburyQuests,
   getRelayer
 } from './config/network.js';
 import sharp from 'sharp';
@@ -181,7 +182,20 @@ app.post('/api/create', async (req, res) => {
     const escrowAddress = await escrowContract.getAddress();
     console.log('Escrow deployed on Base:', escrowAddress);
     // deploy quest
-    const quest = await deployContract(getBradburyBridgeIn(), getBradburyBridgeOut(), creator, escrowAddress, title.trim(), desc.trim(), s3Url, prompt.trim(), expirationTimestamp, rewardPool);
+    const quest = await deployContract(
+      getRelayer(), 
+      getBradburyQuests(), 
+      getBradburyBridgeIn(), 
+      getBradburyBridgeOut(), 
+      creator, 
+      escrowAddress, 
+      title.trim(), 
+      desc.trim(), 
+      s3Url, 
+      prompt.trim(), 
+      expirationTimestamp, 
+      rewardPool
+    );
     console.log('Quest deployed on Bradbury:', quest);
     
     if (quest) {
@@ -192,7 +206,7 @@ app.post('/api/create', async (req, res) => {
       console.log("Escrow updated:", tx.hash);
       // add quest to bd
       const transactionHash = await genLayerClient.writeContract({
-        address: '0x4606777e9fA4b003975b0C0066c9d1D72aFeBD10',
+        address: getBradburyQuests(),
         functionName: 'add_quest_creator',
         args: [creator.trim(), quest, title.trim(), expirationTimestamp], 
       });
@@ -376,12 +390,12 @@ function getQuestPage(req) {
 `
 }
 
-async function deployContract(bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
+async function deployContract(relayer, quests, bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
   const contractCode = readFileSync('./contracts/quest.py', 'utf-8');
   
   const hash = await genLayerClient.deployContract({
     code: contractCode,
-    args: [bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool],
+    args: [relayer, quests, bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool],
     leaderOnly: false,
   });
   console.log('Quest tx on Bradbury:', hash);

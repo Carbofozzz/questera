@@ -54,6 +54,10 @@ export function getBradburyBridgeOut() {
     return process.env.IC_BRIDGE_OUT || "";
 }
 
+export function getBradburyQuests() {
+    return process.env.IC_QUESTS || "";
+}
+
 export function getRelayer() {
     return process.env.RELAYER || "";
 }
