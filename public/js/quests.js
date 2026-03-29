@@ -85,7 +85,8 @@ function renderCards(quests) {
             <div class="card__cover-wrap">
               <img
                 class="card__cover"
-                src="${escapeHtml(q.image || '')}"
+                data-src="${escapeHtml(q.image)}"
+                src=""
                 alt="${escapeHtml(q.title || 'Quest image')}"
               />
             </div>
@@ -102,6 +103,13 @@ function renderCards(quests) {
           </article>
         `;
     }).join('');
+
+    const images = cardsRoot.querySelectorAll('.card__cover');
+    images.forEach((img) => {
+        const url = img.dataset.src || '';
+        if (!url) return;
+        loadWithRetry(img, url, 3, 300);
+    });
 
     cardsRoot.onclick = (e) => {
         const btn = e.target.closest('.btn--open');
@@ -204,6 +212,7 @@ async function getQuest(id) {
     const taskEl = document.getElementById('task');
     const commentEl = document.getElementById('comment');
     const area = document.getElementById('q-answer');
+    const clearBtn = document.getElementById('clearInput');
     const questImg = document.getElementById('questImg');
 
     const inputWrap = document.getElementById('questInputWrap');
@@ -266,17 +275,21 @@ async function getQuest(id) {
             if (startProgress) startProgress.classList.add('hidden');
             if (state) {
                 if (q.isCompletedBool) {
-                    if (inputWrap) inputWrap.classList.add('hidden');
+                    if (clearBtn) clearBtn.classList.add('hidden');
+                    if (area) area.classList.add('hidden');
+                    if (commentEl) commentEl.classList.add('hidden');
                     if (questImg) questImg.classList.remove('hidden');
                 } else {
-                    if (inputWrap) inputWrap.classList.remove('hidden');
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                    if (area) area.classList.remove('hidden');
+                    if (commentEl) commentEl.classList.remove('hidden');
                     if (questImg) questImg.classList.add('hidden');
                 }
+                if (inputWrap) inputWrap.classList.remove('hidden');
                 if (answerBtn) answerBtn.classList.remove('hidden');
                 if (startBtn) startBtn.classList.add('hidden');
                 if (narrationEl) narrationEl.classList.remove('hidden');
                 if (taskEl) taskEl.classList.remove('hidden');
-                if (commentEl) commentEl.classList.remove('hidden');
                 if (narrationEl) narrationEl.textContent = state.last_narration
                 if (taskEl) taskEl.textContent = state.last_task_summary
                 if (commentEl) commentEl.textContent = state.last_comment
@@ -532,10 +545,10 @@ async function fundEscrow(gameContract, escrow) {
 }
 
 async function refundEscrow(gameContract) {
-    const tx = await gameContract.endDate();
-    console.log("time", tx.toString());
-    //const tx = await gameContract.claimRefund();
-    //await tx.wait();
+    //const tx = await gameContract.endDate();
+    //console.log("time", tx.toString());
+    const tx = await gameContract.claimRefund();
+    await tx.wait();
 }
 
 function loadWithRetry(imageEl, url, maxRetries = 3, delay = 300) {

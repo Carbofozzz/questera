@@ -67,6 +67,13 @@ class Quests(gl.Contract):
         self.admins.append(gl.message.sender_address)
 
     @gl.public.write
+    def remove_quest(self, contract: str):
+        self._only_admin()
+        quest_contract = Address(contract)
+        if quest_contract in self.quests:
+            del self.quests[quest_contract]
+
+    @gl.public.write
     def add_quest(
         self, 
         creator: str, 
