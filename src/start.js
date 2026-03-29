@@ -236,9 +236,13 @@ app.post('/api/create', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+  });
+} 
+
+export default app;
 
 function getQuestPage(req) {
   return `<!doctype html>
