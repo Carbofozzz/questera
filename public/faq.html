@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,7 +24,7 @@
         <span></span><span></span><span></span>
       </label>
 
-      <nav class="nav" aria-label="Основное меню">
+      <nav class="nav" aria-label="Main navigation">
         <a href="/" class="nav__link">Home</a>
         <a href="/create" class="nav__link">Create Quest</a>
         <a href="/me" class="nav__link">Portfolio</a>
@@ -38,47 +38,92 @@
   <main class="main">
     <div class="container">
       <h1 class="title">How It Works</h1>
-      <p class="subtitle">Participation, Moderation, and Payout Terms</p>
+      <p class="subtitle">Quest publication, participation, moderation, and payout terms</p>
 
       <article class="text-page text-card">
         <section class="text-block">
           <h2 class="text-page__h2">1. General Provisions</h2>
           <p>
-            The Questera platform is intended for publishing and completing quests, 
-            with result verification and subsequent reward allocation. By using the service, 
-            the user accepts these rules.
+            Questera is designed for publishing and completing quests. Before any payout, the result is verified by GenLayer validators,
+            and rewards are paid out from escrow. By using the platform, you agree to these rules.
           </p>
         </section>
 
         <section class="text-block">
           <h2 class="text-page__h2">2. Participant Requirements</h2>
           <p>
-            Participants must provide accurate information and complete tasks in accordance with their descriptions. 
-            Spam activity, artificial boosting, use of bots, and any methods of manipulating results are prohibited.
+            Participants must complete tasks exactly according to the quest description and submit truthful information.
+            Spam, artificial boosting, using bots to submit solutions, and any attempts to manipulate verification outcomes
+            through unfair methods are prohibited.
           </p>
         </section>
 
         <section class="text-block">
           <h2 class="text-page__h2">3. Quest Publication</h2>
           <p>
-            The quest creator must clearly describe the completion requirements, acceptance criteria, deadlines, and reward amount. 
-            Quests with misleading terms may be removed by the administration.
+            The quest creator must clearly describe what the quest is about, provide prompt for AI,
+            set up how long submissions are accepted, and the reward amount deposited into escrow.
+            Quests with misleading wording may be removed by the administration.
+          </p>
+          <p>
+            During publication, the server deploys the escrow contract on Base Sepolia, and sets up the quest logic on GenLayer.
+            After that, the escrow contract should be funded and then the quest becomes available for participation.
           </p>
         </section>
 
         <section class="text-block">
           <h2 class="text-page__h2">4. Completion Verification</h2>
           <p>
-            A consensus of GenLayer AI validators checks whether the submitted result meets the task requirements. 
-            In case of non-compliance, the submission may be rejected with a stated reason.
+            A consensus verdict from GenLayer validators checks whether the submitted answers meets the quest requirements.
+            If the result does not comply, the submission may be rejected with a stated reason.
           </p>
         </section>
 
         <section class="text-block">
           <h2 class="text-page__h2">5. Payouts and Liability</h2>
           <p>
-            Payment is made after completion is confirmed. The platform reserves the right to restrict access 
-            for users who violate the rules.
+            Payout is made after completion is confirmed (the verified result is accepted).
+            The platform may restrict access for users who violate the rules, attempt to manipulate verification,
+            or are found to be involved in fraudulent activity.
+          </p>
+          <p>
+            The reward is held in escrow from the moment the quest is published and is released only after successful completion.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">6. How to Publish a Quest</h2>
+          <p>
+            1) Connect your wallet and make sure the required network is available for deployment.
+            2) Open the quest creation page.
+            3) Fill in: title, description/requirements, prompt, reward pool, end date, and upload an image.
+            4) Click “Create quest”. The server prepares the data, uploads the cover image, and initiates contract deployment.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">7. How to Participate in Quests</h2>
+          <p>
+            1) Connect your wallet.
+            2) Open the quest page and carefully read the description and the end date.
+            3) Prepare your answer/solution and submit it through the participation form before the deadline.
+            4) Wait for the verification status. If the solution is accepted, you become eligible for a payout from escrow.
+          </p>
+          <p>
+            Submit original and well-justified solutions. Do not use bots, and do not try to replace or re-submit results
+            in an attempt to bypass acceptance criteria.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">8. Moderation and Safety</h2>
+          <p>
+            The administration may remove or hide quests that violate the rules or contain inaccurate/misleading information.
+            We also fight spam and attempts to manipulate verification outcomes.
+          </p>
+          <p>
+            If you believe your submission was rejected incorrectly, review the wording of the requirements and your answer format.
+            For correct acceptance, the provided criteria must be clear and unambiguous.
           </p>
         </section>
       </article>
