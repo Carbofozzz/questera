@@ -2,6 +2,7 @@
   "name": "questera",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node src/start.js",
     "dev": "NODE_ENV=development node src/start.js"
