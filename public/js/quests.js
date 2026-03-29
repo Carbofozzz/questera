@@ -212,6 +212,7 @@ async function getQuest(id) {
     const taskEl = document.getElementById('task');
     const commentEl = document.getElementById('comment');
     const area = document.getElementById('q-answer');
+    const clearBtn = document.getElementById('clearInput');
     const questImg = document.getElementById('questImg');
 
     const inputWrap = document.getElementById('questInputWrap');
@@ -274,17 +275,21 @@ async function getQuest(id) {
             if (startProgress) startProgress.classList.add('hidden');
             if (state) {
                 if (q.isCompletedBool) {
-                    if (inputWrap) inputWrap.classList.add('hidden');
+                    if (clearBtn) clearBtn.classList.add('hidden');
+                    if (area) area.classList.add('hidden');
+                    if (commentEl) commentEl.classList.add('hidden');
                     if (questImg) questImg.classList.remove('hidden');
                 } else {
-                    if (inputWrap) inputWrap.classList.remove('hidden');
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                    if (area) area.classList.remove('hidden');
+                    if (commentEl) commentEl.classList.remove('hidden');
                     if (questImg) questImg.classList.add('hidden');
                 }
+                if (inputWrap) inputWrap.classList.remove('hidden');
                 if (answerBtn) answerBtn.classList.remove('hidden');
                 if (startBtn) startBtn.classList.add('hidden');
                 if (narrationEl) narrationEl.classList.remove('hidden');
                 if (taskEl) taskEl.classList.remove('hidden');
-                if (commentEl) commentEl.classList.remove('hidden');
                 if (narrationEl) narrationEl.textContent = state.last_narration
                 if (taskEl) taskEl.textContent = state.last_task_summary
                 if (commentEl) commentEl.textContent = state.last_comment
