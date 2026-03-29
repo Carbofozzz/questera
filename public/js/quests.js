@@ -85,7 +85,8 @@ function renderCards(quests) {
             <div class="card__cover-wrap">
               <img
                 class="card__cover"
-                src="${escapeHtml(q.image || '')}"
+                data-src="${escapeHtml(q.image)}"
+                src=""
                 alt="${escapeHtml(q.title || 'Quest image')}"
               />
             </div>
@@ -102,6 +103,13 @@ function renderCards(quests) {
           </article>
         `;
     }).join('');
+
+    const images = cardsRoot.querySelectorAll('.card__cover');
+    images.forEach((img) => {
+        const url = img.dataset.src || '';
+        if (!url) return;
+        loadWithRetry(img, url, 3, 300);
+    });
 
     cardsRoot.onclick = (e) => {
         const btn = e.target.closest('.btn--open');
@@ -532,10 +540,10 @@ async function fundEscrow(gameContract, escrow) {
 }
 
 async function refundEscrow(gameContract) {
-    const tx = await gameContract.endDate();
-    console.log("time", tx.toString());
-    //const tx = await gameContract.claimRefund();
-    //await tx.wait();
+    //const tx = await gameContract.endDate();
+    //console.log("time", tx.toString());
+    const tx = await gameContract.claimRefund();
+    await tx.wait();
 }
 
 function loadWithRetry(imageEl, url, maxRetries = 3, delay = 300) {
