@@ -175,7 +175,8 @@ app.post('/api/create', async (req, res) => {
     const s3Url = s3UploadResult.Location;
 
     // deploy escrow
-    const escrowContract = await escrowFactory.deploy(creator, getBaseUSDC(), getBaseBridgeIn(), getBaseBridgeOut(), rewardPool, expirationTimestamp);
+    const expirationTimestampSec = expirationTimestamp / 1000;
+    const escrowContract = await escrowFactory.deploy(creator, getBaseUSDC(), getBaseBridgeIn(), getBaseBridgeOut(), rewardPool, expirationTimestampSec);
     await escrowContract.waitForDeployment();
     const escrowAddress = await escrowContract.getAddress();
     console.log('Escrow deployed on Base:', escrowAddress);
@@ -191,9 +192,9 @@ app.post('/api/create', async (req, res) => {
       console.log("Escrow updated:", tx.hash);
       // add quest to bd
       const transactionHash = await genLayerClient.writeContract({
-        address: '0x799FbF3f9C7D40F19522555a119c58433A45decE',
-        functionName: 'add_quest',
-        args: [creator.trim(), quest, title.trim(), desc.trim(), s3Url, expirationTimestamp, rewardPool], 
+        address: '0x4606777e9fA4b003975b0C0066c9d1D72aFeBD10',
+        functionName: 'add_quest_creator',
+        args: [creator.trim(), quest, title.trim(), expirationTimestamp], 
       });
       console.log("Add quest tx on Bradbury", transactionHash);
       const receiptB = await genLayerClient.waitForTransactionReceipt({

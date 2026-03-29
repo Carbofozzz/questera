@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questera — How It Works</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body data-page-name="portfolio">
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo" aria-label="Questera">
+        <img src="/img/logo.png" alt="Questera" />
+      </a>
+
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Open menu" />
+      <label for="nav-toggle" class="burger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="nav" aria-label="Основное меню">
+        <a href="/" class="nav__link">Home</a>
+        <a href="/create" class="nav__link">Create Quest</a>
+        <a href="/me" class="nav__link">Portfolio</a>
+        <a href="/faq" class="nav__link">How It Works</a>
+      </nav>
+
+      <button id="connectBtn" class="btn btn--wallet">Connect Wallet</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <h1 class="title">Quests stat</h1>
+      <p id="subtitle" class="subtitle"></p>
+
+      <article class="text-page text-card">
+        <section class="text-block">
+          <h2 class="text-page__h2">Quests you created</h2>
+          <div id="createdQuests"></div>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">Quests you participated</h2>
+          <div id="joinedQuests"></div>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__row">
+      <p>© 2026 Questera. All rights reserved.</p>
+      <p>Questera — quest platform with escrow payouts powered by GenLayer.</p>
+    </div>
+  </footer>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

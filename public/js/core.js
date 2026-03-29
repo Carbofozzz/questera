@@ -6,7 +6,7 @@ import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethe
 let client = null;
 let inited = false;
 
-let contractQuests = '0x799FbF3f9C7D40F19522555a119c58433A45decE';
+let contractQuests = '0x4606777e9fA4b003975b0C0066c9d1D72aFeBD10';
 
 const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
 const BASE_SEPOLIA_USDC= "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
@@ -26,6 +26,7 @@ const escrowAbi = [
     "function claimableAmount(address user) external view returns (uint256)",
     "function winnersCount() external view returns (uint256)",
     "function poolAmount() external view returns (uint256)",
+    "function endDate() external view returns (uint256)",
     "function funded() external view returns (bool)",
     "function refunded() external view returns (bool)"
 ];

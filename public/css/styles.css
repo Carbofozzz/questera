@@ -266,6 +266,7 @@
     font-weight: 800;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    max-height: calc(1em * 1.15 * 2);
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -276,8 +277,9 @@
     font-size: clamp(14px, 0.9vw, 17px);
     line-height: 1.35;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    max-height: calc(1em * 1.35 * 3);
     overflow: hidden;
   }
   
@@ -395,6 +397,21 @@
     .cards {
       gap: 14px;
     }
+  }
+
+  #createdQuests {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .portfolio-quest-link {
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .portfolio-quest-link:hover {
+    text-decoration: underline;
   }
   
   /* Mobile */

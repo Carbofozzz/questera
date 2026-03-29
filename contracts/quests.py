@@ -27,15 +27,32 @@ class Quest:
             "pool": str(self.pool)
         }
 
+@allow_storage
+@dataclass
+class QuestMini:
+    creator: Address
+    contract: Address
+    title: str
+    end_date: str
+
+    def to_dict(self):
+        return {
+            "creator": self.creator.as_hex,
+            "contract": self.contract.as_hex,
+            "title": self.title,
+            "end_date": self.end_date
+        }
+
 class Quests(gl.Contract):
     admins: DynArray[Address]
     quests: TreeMap[Address, Quest]
-    state: str
+    quest_by_creators: TreeMap[Address, TreeMap[Address, QuestMini]]
+    quest_by_users: TreeMap[Address, TreeMap[Address, QuestMini]]
+    quests: TreeMap[Address, Quest]
 
     def __init__(self):
         self.admins.append(gl.message.sender_address)
         self.admins.append(Address("0xb1d8d84c9e3a11d86103a51aa552Fa562B2b34c3"))
-        self.state = "Empty"
 
     @gl.public.write
     def add_admin(self, admin_contract: str):
@@ -53,15 +70,13 @@ class Quests(gl.Contract):
     def add_quest(
         self, 
         creator: str, 
-        contract: str, 
         title: str, 
         desc: str, 
         image: str,
         end_date: int,
         pool: int
     ):
-        self._only_admin()
-        quest_contract = Address(contract)
+        quest_contract = gl.message.sender_address
         quest_creator = Address(creator)
         quest = Quest(
             creator = quest_creator,
@@ -73,6 +88,45 @@ class Quests(gl.Contract):
             pool = u256(pool)
         )
         self.quests[quest_contract] = quest
+        
+
+    @gl.public.write
+    def add_quest_creator(
+        self, 
+        creator: str, 
+        contract: str, 
+        title: str,
+        end_date: int
+    ):
+        self._only_admin()
+        quest_contract = Address(contract)
+        quest_creator = Address(creator)
+        quest = QuestMini(
+            creator = quest_creator,
+            contract = quest_contract,
+            title = title,
+            end_date = str(end_date / 1000)
+        )
+        self.quest_by_creators.get_or_insert_default(quest_creator)[quest_contract] = quest
+
+    @gl.public.write
+    def add_quest_user(
+        self, 
+        creator: str, 
+        user: str, 
+        title: str,
+        end_date: int
+    ):
+        quest_contract = gl.message.sender_address
+        quest_creator = Address(creator)
+        quest_user = Address(user)
+        quest = QuestMini(
+            creator = quest_creator,
+            contract = quest_contract,
+            title = title,
+            end_date = str(end_date / 1000)
+        )
+        self.quest_by_users.get_or_insert_default(quest_user)[quest_contract] = quest
 
     @gl.public.view
     def get_quests_pool(self, limit: int) -> str:
@@ -90,15 +144,21 @@ class Quests(gl.Contract):
 
     @gl.public.view
     def get_my_quests(self, limit: int) -> str:
+        q = self.quest_by_creators.get(gl.message.sender_address, None)
         result = []
-        for k, v in sorted(self.quests.items(), key=lambda kv: kv[1].is_active, reverse=True)[:limit]:
-            if v.creator == gl.message.sender_address:
+        if q is not None:
+            for k, v in sorted(q.items(), key=lambda kv: float(kv[1].end_date), reverse=True)[:limit]:
                 result.append(v.to_dict())
         return json.dumps(result)
 
     @gl.public.view
-    def get_state(self) -> str:
-        return self.state
+    def get_my_quests_user(self, limit: int) -> str:
+        q = self.quest_by_users.get(gl.message.sender_address, None)
+        result = []
+        if q is not None:
+            for k, v in sorted(q.items(), key=lambda kv: float(kv[1].end_date), reverse=True)[:limit]:
+                result.append(v.to_dict())
+        return json.dumps(result)
 
     @gl.public.view
     def get_admins(self) -> str:

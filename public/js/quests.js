@@ -6,7 +6,6 @@ import {
     getAddress,
     escrowAbi,
     getUSDC,
-    getUSDCBalance,
     checkGenlayerBradbury,
     checkBaseSepolia,
     ethers
@@ -533,8 +532,10 @@ async function fundEscrow(gameContract, escrow) {
 }
 
 async function refundEscrow(gameContract) {
-    const tx = await gameContract.refund();
-    await tx.wait();
+    const tx = await gameContract.endDate();
+    console.log("time", tx.toString());
+    //const tx = await gameContract.claimRefund();
+    //await tx.wait();
 }
 
 function loadWithRetry(imageEl, url, maxRetries = 3, delay = 300) {
@@ -565,7 +566,7 @@ function loadWithRetry(imageEl, url, maxRetries = 3, delay = 300) {
 
 function parseDateToUnixTimestamp(dateValue) {
     if (!dateValue) return 0;
-    const parsedDate = new Date(`${dateValue}T00:00:00`);
+    const parsedDate = new Date(`${dateValue}T00:00:00Z`);
     return Math.floor(parsedDate.getTime());
 }
 
