@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questera — How It Works</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo" aria-label="Questera">
+        <img src="/img/logo.png" alt="Questera" />
+      </a>
+
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Open menu" />
+      <label for="nav-toggle" class="burger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="nav" aria-label="Основное меню">
+        <a href="/" class="nav__link">Home</a>
+        <a href="/create" class="nav__link">Create Quest</a>
+        <a href="/me" class="nav__link">Portfolio</a>
+        <a href="/faq" class="nav__link">How It Works</a>
+      </nav>
+
+      <button id="connectBtn" class="btn btn--wallet">Connect Wallet</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <h1 class="title">How It Works</h1>
+      <p class="subtitle">Participation, Moderation, and Payout Terms</p>
+
+      <article class="text-page text-card">
+        <section class="text-block">
+          <h2 class="text-page__h2">1. General Provisions</h2>
+          <p>
+            The Questera platform is intended for publishing and completing quests, 
+            with result verification and subsequent reward allocation. By using the service, 
+            the user accepts these rules.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">2. Participant Requirements</h2>
+          <p>
+            Participants must provide accurate information and complete tasks in accordance with their descriptions. 
+            Spam activity, artificial boosting, use of bots, and any methods of manipulating results are prohibited.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">3. Quest Publication</h2>
+          <p>
+            The quest creator must clearly describe the completion requirements, acceptance criteria, deadlines, and reward amount. 
+            Quests with misleading terms may be removed by the administration.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">4. Completion Verification</h2>
+          <p>
+            A consensus of GenLayer AI validators checks whether the submitted result meets the task requirements. 
+            In case of non-compliance, the submission may be rejected with a stated reason.
+          </p>
+        </section>
+
+        <section class="text-block">
+          <h2 class="text-page__h2">5. Payouts and Liability</h2>
+          <p>
+            Payment is made after completion is confirmed. The platform reserves the right to restrict access 
+            for users who violate the rules.
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__row">
+      <p>© 2026 Questera. All rights reserved.</p>
+      <p>Questera — quest platform with escrow payouts powered by GenLayer.</p>
+    </div>
+  </footer>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

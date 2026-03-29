@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Questera — Creating a quest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container header__row">
+      <a href="/" class="logo" aria-label="Questera">
+        <img src="/img/logo.png" alt="Questera" />
+      </a>
+
+      <input id="nav-toggle" class="nav-toggle" type="checkbox" aria-label="Open menu" />
+      <label for="nav-toggle" class="burger" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </label>
+
+      <nav class="nav" aria-label="Основное меню">
+        <a href="/" class="nav__link">Home</a>
+        <a href="/create" class="nav__link">Create Quest</a>
+        <a href="/me" class="nav__link">Portfolio</a>
+        <a href="/faq" class="nav__link">How It Works</a>
+      </nav>
+
+      <button id="connectBtn" class="btn btn--wallet">Connect Wallet</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <h1 class="title">Creating a quest</h1>
+      <p class="subtitle">Fill in the details and publish the task</p>
+
+      <section class="form-page card" aria-label="Форма создания квеста">
+        <form id="questForm" class="quest-form" action="#" method="post" enctype="multipart/form-data">
+          <div class="form-field">
+            <label class="form-label" for="q-title">Title</label>
+            <input id="q-title" name="title" class="form-input" type="text" placeholder="Your quest name..." />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="q-desc">Description</label>
+            <textarea id="q-desc" name="description" class="form-textarea" placeholder="Detailed conditions for completing the quest..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="q-prompt">Prompt</label>
+            <textarea id="q-prompt" name="description" class="form-textarea" placeholder="Detailed prompt for creating the quest. For example: 5 brave penguins set out to search for a lost city in Tibet. Their goal is to find an ancient manuscript containing a spell to prevent the melting of Antarctica's snow caps..."></textarea>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="q-reward">Reward pool (USDC)</label>
+            <input id="q-reward" name="reward" class="form-input" type="number" min="1" step="1" placeholder="50" />
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="q-date">End date</label>
+            <input id="q-date" name="expiration_date" class="form-input" type="date" />
+          </div>
+
+          <div class="form-field">
+            <span class="form-label">Image</span>
+            <label class="upload-box" for="q-cover">
+              <input id="q-cover" name="cover" type="file" accept="image/*" />
+              <img id="previewImg" class="upload-box__preview hidden" alt="Preview" />
+              <span class="upload-box__plus">+</span>
+              <span class="upload-box__text">Select image</span>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button id="createBtn" type="submit" class="btn btn--open">Create quest</button>
+            <div id="createProgress" class="spinner hidden" aria-label="Loading"></div>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__row">
+      <p>© 2026 Questera. All rights reserved.</p>
+      <p>Questera — quest platform with escrow payouts powered by GenLayer.</p>
+    </div>
+  </footer>
+  <script type="module" src="js/main.js"></script>
+  <script>
+    const form = document.getElementById('questForm');
+    const fileInput = document.getElementById('q-cover');
+    const previewImg = document.getElementById('previewImg');
+    let selectedDataUrl = null;
+    fileInput.addEventListener('change', () => {
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        selectedDataUrl = null;
+        previewImg.classList.add('hidden');
+        previewImg.src = '';
+
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+          alert('Please select an image file');
+          fileInput.value = '';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+          selectedDataUrl = e.target.result;
+          previewImg.src = selectedDataUrl;
+          previewImg.classList.remove('hidden');
+        };
+        reader.onerror = () => {
+          alert('Failed to read the file');
+        };
+        reader.readAsDataURL(file);
+    });
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          if (!WalletUI.isConnected()) throw new Error('Please connect your wallet first');
+        } catch (e) { 
+          alert(e.message); return; 
+        }
+        try {
+            const title = String(document.getElementById('q-title')?.value || '').trim();
+            const desc = String(document.getElementById('q-desc')?.value || '').trim();
+            const prompt = String(document.getElementById('q-prompt')?.value || '').trim();
+            const pool = Number(document.getElementById('q-reward')?.value || 0);
+            const dateValue = String(document.getElementById('q-date')?.value || '');
+
+            if (!title) throw new Error('Title is required');
+            if (!desc) throw new Error('Description is required');
+            if (!prompt) throw new Error('Prompt is required');
+            if (!Number.isFinite(pool) || pool <= 0) throw new Error('Reward must be greater than 0');
+            if (!dateValue) throw new Error('End date is required');
+            if (!selectedDataUrl) throw new Error('Image is required');
+
+            WalletUI.createQuest(title, desc, prompt, selectedDataUrl, pool, dateValue);
+        } catch (error) {
+            console.error('[Quests] Create quest error:', error);
+            alert(error.message || 'Failed to create quest');
+        }
+    });
+  </script>
+</body>
+</html>
