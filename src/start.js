@@ -347,7 +347,7 @@ function getQuestPage(req) {
                 <span class="quest-steps__dot quest-steps__dot--violet"></span>
                 <div>
                   <div class="quest-steps__name">Your reward</div>
-                  <div id="playerReward" class="quest-steps__meta">O USDC</div>
+                  <div id="playerReward" class="quest-steps__meta">0 USDC</div>
                   <div id="playerAction" class="quest-side__action hidden"></div>
                 </div>
               </li>

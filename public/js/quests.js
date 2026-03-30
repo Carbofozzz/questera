@@ -247,7 +247,7 @@ async function getQuest(id) {
         const q = normalizeQuest(JSON.parse(game));
         const nowSec = Math.floor(Date.now() / 1000);
         const isExpired = q.endSec <= nowSec;
-        const isDisabled = !q.isActiveBool || isExpired;
+        const isDisabled = !q.isActiveBool;
 
         if (titleEl) titleEl.textContent = q.title || 'Untitled';
         if (descEl) descEl.textContent = q.desc || '';
@@ -308,8 +308,14 @@ async function getQuest(id) {
             } else {
                 if (submitBtn) submitBtn.classList.remove('hidden');
             }
-            if (checkEl) checkEl.classList.remove('quest-check--past');
-            if (checkEl) checkEl.classList.add('quest-check--active');
+            if (isExpired) {
+                if (checkEl) checkEl.classList.add('quest-check--past');
+                if (checkEl) checkEl.classList.remove('quest-check--active');
+            } else {
+                if (checkEl) checkEl.classList.remove('quest-check--past');
+                if (checkEl) checkEl.classList.add('quest-check--active');
+            }
+            
         }
         console.log('[Quest] Success getting quest:', q);
         checkEscrow(q.escrow, q.creator, isExpired);
@@ -448,6 +454,7 @@ async function checkEscrow(escrow, creator, isExpired) {
                         text: 'Refund',
                         onClick: async () => {
                             await refundEscrow(gameContract);
+                            await sleep(1000);
                             await checkEscrow(escrow, creator, isExpired);
                         },
                         loadingText: 'Refunding...'
