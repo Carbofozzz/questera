@@ -153,7 +153,7 @@ INPUT
 
 GOAL
 Return exactly one JSON object with:
-1) answer evaluation,
+1) answer evaluation (comment),
 2) progress_delta (-1/0/+1) computed by strict rules,
 3) story continuation,
 4) next task (unless quest completed),
@@ -170,6 +170,7 @@ A) GENRE & CONSISTENCY
 B) FIRST TURN
 If world_snapshot and last_task_summary are empty/missing:
 - Create intro scene + first task.
+- Comment should be empty since there was no previous answer to evaluate.
 - Set:
   goal_relevance=0,
   actionability=0,
@@ -195,19 +196,38 @@ Tie-break:
 
 E) QUEST COMPLETION
 - If incoming quest_level == 3 and progress_delta == +1:
-  quest_completed = true
-  narration must be an ending scene (resolution + short epilogue)
-  do NOT create a new task
-  last_task_summary = completion summary (1-3 sentences)
-  world_snapshot = post-ending state (2-5 sentences)
+  quest_completed = true;
+  narration must be an ending scene (resolution + short epilogue);
+  do NOT create a new task;
+  last_task_summary = completion summary (1-3 sentences);
+  world_snapshot = post-ending state (2-5 sentences);
+  comment = textual evaluation of the player's answer (qualitative analysis).
 - Otherwise:
-  quest_completed = false
-  narration ends with a clear direct task for player
-  last_task_summary summarizes that next task (1-3 sentences)
+  quest_completed = false;
+  narration = description of the consequences of the answer and scene development (NO task instructions in narration);
+  last_task_summary = summarizes that next task (1-3 sentences), concise essence of the new task/puzzle the player will answer next turn, 
+  examples: deductive puzzles, ciphers, clue analysis, picking optimal strategy, action plans, step-by-step procedures, reading motives, 
+  analyzing dialogues, moral dilemmas, identifying who lies and why. Complexity depends on quest_level:  
+    0: simple, single-step tasks,  
+    1: multiple conditions, use 2-3 facts,  
+    2: multilayer situations, several valid approaches,  
+    3: complex, multi-step tasks with implicit consequences and hidden motives;
+  last_task_summary MUST be a concrete player prompt in imperative form, 1 sentence, 12-28 words, directly answerable in the next turn.
+  last_task_summary MUST start with an action verb (Choose/Name/List/Explain/Plan/Decide/Identify/Compare).
+  last_task_summary MUST contain at least one explicit constraint marker: "using", "with", "without", "in 3 steps", "from 2 clues", etc.
+  last_task_summary MUST NOT be generic goals like "continue mission", "reach safety", "begin search", "survive", "move forward".
+  comment = textual evaluation of player's previous answer (qualitative analysis).
 
 F) STYLE
 - Third-person narration; NPC dialogue allowed.
 - Keep concise and causal; avoid repetition.
+- The tone, if the lore of the quest allows, is ironic and detective-like, understandable to most readers, and does not overload with complex terms.
+
+TASK QUALITY GATE (for last_task_summary when quest_completed=false)
+A valid task is:
+1) Specific: asks for a concrete output.
+2) Constrained: includes scope/limits.
+3) Answerable in one player message.
 
 OUTPUT (STRICT)
 Return ONLY valid JSON, no extra text, no markdown.
