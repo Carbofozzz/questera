@@ -395,7 +395,8 @@ function getQuestPage(req) {
 }
 
 async function deployContract(relayer, quests, bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
-  const contractCode = readFileSync('./contracts/quest.py', 'utf-8');
+  const contractPath = path.join(__dirname, '../contracts/quest.py');
+  const contractCode = readFileSync(contractPath, 'utf-8');
   
   const hash = await genLayerClient.deployContract({
     code: contractCode,
