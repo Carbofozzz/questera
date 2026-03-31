@@ -45,10 +45,10 @@ class QuestMini:
 
 class Quests(gl.Contract):
     admins: DynArray[Address]
+    banned: DynArray[str]
     quests: TreeMap[Address, Quest]
     quest_by_creators: TreeMap[Address, TreeMap[Address, QuestMini]]
     quest_by_users: TreeMap[Address, TreeMap[Address, QuestMini]]
-    quests: TreeMap[Address, Quest]
 
     def __init__(self):
         self.admins.append(gl.message.sender_address)
@@ -65,6 +65,11 @@ class Quests(gl.Contract):
         self._only_admin()
         self.admins.clear()
         self.admins.append(gl.message.sender_address)
+
+    @gl.public.write
+    def ban_quest(self, contract: str):
+        self._only_admin()
+        self.banned.append(contract)
 
     @gl.public.write
     def remove_quest(self, contract: str):
@@ -139,14 +144,16 @@ class Quests(gl.Contract):
     def get_quests_pool(self, limit: int) -> str:
         result = []
         for k, v in sorted(self.quests.items(), key=lambda kv: kv[1].pool, reverse=True)[:limit]:
-            result.append(v.to_dict())
+            if k.as_hex not in self.banned:
+                result.append(v.to_dict())
         return json.dumps(result)
 
     @gl.public.view
     def get_quests_date(self, limit: int) -> str:
         result = []
         for k, v in sorted(self.quests.items(), key=lambda kv: float(kv[1].end_date), reverse=True)[:limit]:
-            result.append(v.to_dict())
+            if k.as_hex not in self.banned:
+                result.append(v.to_dict())
         return json.dumps(result)
 
     @gl.public.view
