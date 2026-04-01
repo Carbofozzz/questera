@@ -21,7 +21,7 @@ async function getStat() {
         });
         const parsed = JSON.parse(quests);
         const array = Array.isArray(parsed) ? parsed : [];
-        renderCreatedQuests(createdQuests, array);
+        renderCreatedQuests(createdQuests, array, false);
         console.log("[Portfolio] Created Quests:", array)
     } catch(error) {
         console.error('[Portfolio] Created Quests error:', error);
@@ -35,7 +35,7 @@ async function getStat() {
         });
         const parsed = JSON.parse(quests);
         const array = Array.isArray(parsed) ? parsed : [];
-        renderCreatedQuests(joinedQuests, array);
+        renderCreatedQuests(joinedQuests, array, false);
         console.log("[Portfolio] Joined Quests:", array)
     } catch(error) {
         console.error('[Portfolio] Joined Quests error:', error);
@@ -57,7 +57,7 @@ async function getStatStudio() {
         });
         const parsed = JSON.parse(quests);
         const array = Array.isArray(parsed) ? parsed : [];
-        renderCreatedQuests(createdQuests, array);
+        renderCreatedQuests(createdQuests, array, true);
         console.log("[Portfolio] Created Quests:", array)
     } catch(error) {
         console.error('[Portfolio] Created Quests error:', error);
@@ -71,7 +71,7 @@ async function getStatStudio() {
         });
         const parsed = JSON.parse(quests);
         const array = Array.isArray(parsed) ? parsed : [];
-        renderCreatedQuests(joinedQuests, array);
+        renderCreatedQuests(joinedQuests, array, true);
         console.log("[Portfolio] Joined Quests:", array)
     } catch(error) {
         console.error('[Portfolio] Joined Quests error:', error);
@@ -79,7 +79,7 @@ async function getStatStudio() {
     }
 }
 
-function renderCreatedQuests(container, quests) {
+function renderCreatedQuests(container, quests, studionet) {
     if (!container) return;
     container.innerHTML = '';
 
@@ -92,7 +92,11 @@ function renderCreatedQuests(container, quests) {
 
     quests.forEach((q) => {
         const link = document.createElement('a');
-        link.href = `quest/${encodeURIComponent(q.contract)}`;
+        if (studionet) {
+            link.href = `quest-studio/${encodeURIComponent(q.contract)}`;
+        } else {
+            link.href = `quest/${encodeURIComponent(q.contract)}`;
+        }
         link.className = 'portfolio-quest-link';
         link.textContent = `${q.title} — until ${formatDateFromSec(q.end_date)}`;
         fragment.appendChild(link);
