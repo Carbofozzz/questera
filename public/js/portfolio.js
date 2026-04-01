@@ -37,7 +37,7 @@ async function getStat() {
         console.log("[Portfolio] Joined Quests:", array)
     } catch(error) {
         console.error('[Portfolio] Joined Quests error:', error);
-        if (createdQuests) createdQuests.textContent = 'Something went wrong';
+        if (joinedQuests) joinedQuests.textContent = 'Something went wrong';
     }
 }
 
