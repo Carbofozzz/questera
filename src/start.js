@@ -739,6 +739,5 @@ async function deployContractStudioNet(relayer, quests, bridge_in, bridge_out, c
     retries: 200,
     interval: 5000,
   });
-  console.log('Quest tx on Studionet:', receipt);
   return receipt.data?.contract_address;
 }
