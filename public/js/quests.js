@@ -1,17 +1,26 @@
 import {
     client,
+    clientStudioNet,
     TransactionStatus,
     ExecutionResult,
     contractQuests,
+    contractQuestsStudioNet,
     getAddress,
     escrowAbi,
     getUSDC,
     checkGenlayerBradbury,
+    checkGenlayerStudioNet,
     checkBaseSepolia,
     ethers
 } from './core.js';
 
 let mainState = {
+    sort: 'reward',
+    tab: 'active',
+    quests: []
+};
+
+let mainStateStudioNet = {
     sort: 'reward',
     tab: 'active',
     quests: []
@@ -23,6 +32,20 @@ async function loadQuests(sortType = 'reward') {
 
     const game = await client.readContract({
         address: contractQuests,
+        functionName: fn,
+        args: [50],
+    });
+
+    const parsed = JSON.parse(game);
+    return Array.isArray(parsed) ? parsed : [];
+}
+
+async function loadQuestsStudioNet(sortType = 'reward') {
+    if (!clientStudioNet) return [];
+    const fn = sortType === 'date' ? 'get_quests_date' : 'get_quests_pool';
+
+    const game = await clientStudioNet.readContract({
+        address: contractQuestsStudioNet,
         functionName: fn,
         args: [50],
     });
@@ -122,6 +145,58 @@ function renderCards(quests) {
     };
 }
 
+function renderCardsStudioNet(quests) {
+    const cardsRoot = document.querySelector('.cards');
+    if (!cardsRoot) return;
+
+    if (!quests.length) {
+        cardsRoot.innerHTML = `<p class="empty">No quests found</p>`;
+        return;
+    }
+
+    cardsRoot.innerHTML = quests.map(q => {
+        return `
+          <article class="card" data-contract="${escapeHtml(q.contract || '')}">
+            <div class="card__cover-wrap">
+              <img
+                class="card__cover"
+                data-src="${escapeHtml(q.image)}"
+                src=""
+                alt="${escapeHtml(q.title || 'Quest image')}"
+              />
+            </div>
+
+            <h3 class="card__title">${escapeHtml(q.title || 'Untitled')}</h3>
+            <p class="card__desc">${escapeHtml(q.desc || '')}</p>
+
+            <div class="card__meta">
+              <span class="price"><span class="price__icon">$</span> ${q.poolNum} USDC</span>
+              <span class="date">ends ${formatDateFromSec(q.endSec)}</span>
+            </div>
+
+            <button class="btn btn--open" data-contract="${escapeHtml(q.contract || '')}">Open Quest</button>
+          </article>
+        `;
+    }).join('');
+
+    const images = cardsRoot.querySelectorAll('.card__cover');
+    images.forEach((img) => {
+        const url = img.dataset.src || '';
+        if (!url) return;
+        loadWithRetry(img, url, 3, 300);
+    });
+
+    cardsRoot.onclick = (e) => {
+        const btn = e.target.closest('.btn--open');
+        if (!btn) return;
+
+        const contract = btn.dataset.contract;
+        if (!contract) return;
+
+        window.location.href = `/quest-studio/${encodeURIComponent(contract)}`;
+    };
+}
+
 function setActiveTabUI(tab) {
     const activeBtn = document.getElementById('activeBtn');
     const pastBtn = document.getElementById('pastBtn');
@@ -140,6 +215,12 @@ async function redrawMain() {
     const filtered = filterByTab(mainState.quests, mainState.tab);
     renderCards(filtered);
     setActiveTabUI(mainState.tab);
+}
+
+async function redrawMainStudioNet() {
+    const filtered = filterByTab(mainStateStudioNet.quests, mainStateStudioNet.tab);
+    renderCardsStudioNet(filtered);
+    setActiveTabUI(mainStateStudioNet.tab);
 }
 
 async function initMain() {
@@ -189,6 +270,57 @@ async function initMain() {
         pastBtn.addEventListener('click', async () => {
             mainState.tab = 'past';
             await redrawMain();
+        });
+    }
+}
+
+async function initMainStudio() {
+    if (!clientStudioNet) return;
+    console.log("[Quests] Start init main");
+
+    const activeBtn = document.getElementById('activeBtn');
+    const pastBtn = document.getElementById('pastBtn');
+    const sortSelect = document.getElementById('sort-select');
+
+    if (sortSelect) {
+        const value = (sortSelect.value || '').toLowerCase();
+        mainStateStudioNet.sort = value === 'date' ? 'date' : 'reward';
+    }
+
+    try {
+        mainStateStudioNet.quests = (await loadQuestsStudioNet(mainStateStudioNet.sort)).map(normalizeQuest);
+        await redrawMainStudioNet();
+        console.log('[Quests] Success getting quests:', mainStateStudioNet.quests);
+    } catch (error) {
+        console.error('[Quests] Error getting quests:', error);
+        renderCardsStudioNet([]);
+    }
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', async (e) => {
+            const value = (e.target.value || '').toLowerCase();
+            mainStateStudioNet.sort = value === 'date' ? 'date' : 'reward';
+
+            try {
+                mainStateStudioNet.quests = (await loadQuestsStudioNet(mainStateStudioNet.sort)).map(normalizeQuest);
+                await redrawMainStudioNet();
+            } catch (error) {
+                console.error('[Quests] Error getting quests on sort change:', error);
+            }
+        });
+    }
+
+    if (activeBtn) {
+        activeBtn.addEventListener('click', async () => {
+            mainStateStudioNet.tab = 'active';
+            await redrawMainStudioNet();
+        });
+    }
+
+    if (pastBtn) {
+        pastBtn.addEventListener('click', async () => {
+            mainStateStudioNet.tab = 'past';
+            await redrawMainStudioNet();
         });
     }
 }
@@ -326,6 +458,139 @@ async function getQuest(id) {
     }
 }
 
+async function getQuestStudio(id) {
+    if (!clientStudioNet) return;
+    const loader = document.getElementById('questLoader');
+    const content = document.getElementById('questContent');
+    const contentSide = document.getElementById('questContentSide');
+    const titleEl = document.getElementById('questTitle');
+    const descEl = document.getElementById('questDesc');
+    const poolEl = document.getElementById('questPool');
+    const dateEl = document.getElementById('questDate');
+    const imageEl = document.getElementById('questImage');
+    const checkEl = document.getElementById('statusCheck');
+    const poolTotalEl = document.getElementById('poolTotal');
+    const startBtn = document.getElementById('startBtn');
+    const answerBtn = document.getElementById('answerBtn');
+    const startProgress = document.getElementById('startProgress');
+    const narrationEl = document.getElementById('narration');
+    const taskEl = document.getElementById('task');
+    const commentEl = document.getElementById('comment');
+    const area = document.getElementById('q-answer');
+    const clearBtn = document.getElementById('clearInput');
+    const questImg = document.getElementById('questImg');
+
+    const inputWrap = document.getElementById('questInputWrap');
+    const submitBtn = document.getElementById('questBtns');
+
+    const showLoading = () => {
+        if (loader) loader.classList.remove('hidden');
+        if (content) content.classList.add('hidden');
+        if (contentSide) contentSide.classList.add('hidden');
+    };
+
+    const showContent = () => {
+        if (loader) loader.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+        if (contentSide) contentSide.classList.remove('hidden');
+    };
+
+    showLoading();
+
+    try {
+        const logs = await clientStudioNet.readContract({
+            address: id,
+            functionName: "get_log",
+            args: [],
+        });
+        console.log('[Quest] Success getting logs:', logs);
+        const game = await clientStudioNet.readContract({
+            address: id,
+            functionName: "get_my_quest",
+            args: [],
+        });
+        const q = normalizeQuest(JSON.parse(game));
+        const nowSec = Math.floor(Date.now() / 1000);
+        const isExpired = q.endSec <= nowSec;
+        const isDisabled = !q.isActiveBool;
+
+        if (titleEl) titleEl.textContent = q.title || 'Untitled';
+        if (descEl) descEl.textContent = q.desc || '';
+        if (poolEl) poolEl.textContent = `${q.poolNum} USDC`;
+        if (dateEl) dateEl.textContent = q.endSec ? formatDateFromSec(q.endSec) : '—';
+
+        if (imageEl) {
+            loadWithRetry(imageEl, q.image || '', 3);
+            imageEl.alt = q.title || 'Quest image';
+        }
+
+        if (poolTotalEl) poolTotalEl.textContent = q.pool + ' USDC';
+
+        if (isDisabled) {
+            if (questImg) questImg.classList.remove('hidden');
+            if (narrationEl) narrationEl.classList.add('hidden');
+            if (taskEl) taskEl.classList.add('hidden');
+            if (commentEl) commentEl.classList.add('hidden');
+            if (inputWrap) inputWrap.classList.add('hidden');
+            if (submitBtn) submitBtn.classList.add('hidden');
+            if (checkEl) checkEl.classList.add('quest-check--past');
+            if (checkEl) checkEl.classList.remove('quest-check--active');
+        } else {
+            const state = q.state;
+            if (startProgress) startProgress.classList.add('hidden');
+            if (state) {
+                if (q.isCompletedBool) {
+                    if (clearBtn) clearBtn.classList.add('hidden');
+                    if (area) area.classList.add('hidden');
+                    if (commentEl) commentEl.classList.add('hidden');
+                    if (questImg) questImg.classList.remove('hidden');
+                } else {
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                    if (area) area.classList.remove('hidden');
+                    if (commentEl) commentEl.classList.remove('hidden');
+                    if (questImg) questImg.classList.add('hidden');
+                }
+                if (inputWrap) inputWrap.classList.remove('hidden');
+                if (answerBtn) answerBtn.classList.remove('hidden');
+                if (startBtn) startBtn.classList.add('hidden');
+                if (narrationEl) narrationEl.classList.remove('hidden');
+                if (taskEl) taskEl.classList.remove('hidden');
+                if (narrationEl) narrationEl.textContent = state.last_narration
+                if (taskEl) taskEl.textContent = state.last_task_summary
+                if (commentEl) commentEl.textContent = state.last_comment
+                if (area) area.value=''; 
+            } else {
+                if (questImg) questImg.classList.remove('hidden');
+                if (startBtn) startBtn.classList.remove('hidden');
+                if (answerBtn) answerBtn.classList.add('hidden');
+                if (inputWrap) inputWrap.classList.add('hidden');
+                if (narrationEl) narrationEl.classList.add('hidden');
+                if (taskEl) taskEl.classList.add('hidden');
+                if (commentEl) commentEl.classList.add('hidden');
+            }
+            if (q.isCompletedBool) {
+                if (submitBtn) submitBtn.classList.add('hidden');
+            } else {
+                if (submitBtn) submitBtn.classList.remove('hidden');
+            }
+            if (isExpired) {
+                if (checkEl) checkEl.classList.add('quest-check--past');
+                if (checkEl) checkEl.classList.remove('quest-check--active');
+            } else {
+                if (checkEl) checkEl.classList.remove('quest-check--past');
+                if (checkEl) checkEl.classList.add('quest-check--active');
+            }
+            
+        }
+        console.log('[Quest] Success getting quest:', q);
+        checkEscrow(q.escrow, q.creator, isExpired);
+    } catch(error) {
+        console.error('[Quest] Error getting quest:', error);
+    } finally {
+        showContent();
+    }
+}
+
 async function startQuest() {
     if (!client) return;
     const startBtn = document.getElementById('startBtn');
@@ -351,6 +616,34 @@ async function startQuest() {
         console.error('[Quest] Error start quest:', error);
     } finally {
         getQuest(document.body.dataset.questId);
+    }
+}
+
+async function startQuestStudioNet() {
+    if (!clientStudioNet) return;
+    const startBtn = document.getElementById('startBtn');
+    const startProgress = document.getElementById('startProgress');
+    if (startBtn) startBtn.classList.add('hidden');
+    if (startProgress) startProgress.classList.remove('hidden');
+    try {
+        checkGenlayerStudioNet();
+        const txHash = await clientStudioNet.writeContract({
+            address: document.body.dataset.questId,
+            functionName: "start",
+            args: [],
+        });
+        console.error('[Quest] Success tx start quest:', txHash);
+        const receipt = await clientStudioNet.waitForTransactionReceipt({
+            hash: txHash,
+            status: TransactionStatus.ACCEPTED,
+            retries: 200,
+            interval: 5000,
+        });
+        console.error('[Quest] Success start quest:', receipt);
+    } catch(error) {
+        console.error('[Quest] Error start quest:', error);
+    } finally {
+        getQuestStudio(document.body.dataset.questId);
     }
 }
 
@@ -389,6 +682,44 @@ async function answerQuest(answer) {
         console.error('[Quest] Error answer quest:', error);
     } finally {
         getQuest(document.body.dataset.questId);
+    }
+}
+
+async function answerQuestStudioNet(answer) {
+    if (!clientStudioNet) return;
+    const answerBtn = document.getElementById('answerBtn');
+    const startProgress = document.getElementById('startProgress');
+    if (answerBtn) answerBtn.classList.add('hidden');
+    if (startProgress) startProgress.classList.remove('hidden');
+    try {
+        checkGenlayerStudioNet();
+        const txHash = await clientStudioNet.writeContract({
+            address: document.body.dataset.questId,
+            functionName: "answer",
+            args: [answer],
+        });
+        console.error('[Quest] Success tx answer quest:', txHash);
+        const receipt = await clientStudioNet.waitForTransactionReceipt({
+            hash: txHash,
+            status: TransactionStatus.ACCEPTED,
+            retries: 200,
+            interval: 5000,
+        });
+        if (receipt.txExecutionResultName === ExecutionResult.FINISHED_WITH_RETURN) {
+            // Execution succeeded — safe to read state
+                
+        } else if (receipt.txExecutionResultName === ExecutionResult.FINISHED_WITH_ERROR) {
+            // Execution failed — contract state was not modified
+            console.error("[Quest] Contract execution failed");
+        } else {
+            // NOT_VOTED — execution hasn't completed
+            console.warn("[Quest] Execution result not yet available");
+        }
+        console.log('[Quest] Success answer quest:', receipt.txExecutionResultName);
+    } catch(error) {
+        console.error('[Quest] Error answer quest:', error);
+    } finally {
+        getQuestStudio(document.body.dataset.questId);
     }
 }
 
@@ -634,10 +965,59 @@ async function createQuest(title, desc, prompt, image, pool, dateValue) {
     }
 }
 
+async function createQuestStudioNet(title, desc, prompt, image, pool, dateValue) {
+    const form = document.getElementById('questForm');
+    const preview = document.getElementById('previewImg');
+    const btn = document.getElementById('createBtn');
+    const progress = document.getElementById('createProgress');
+    if (btn) btn.classList.add('hidden');
+    if (progress) progress.classList.remove('hidden');
+    try {
+        const date = parseDateToUnixTimestamp(dateValue);
+        const creator = getAddress();
+        const response = await fetch('/api/create-studio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image,
+                title,
+                desc,
+                prompt,
+                creator,
+                date,
+                pool
+            })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Quest creation failed');
+        }
+        console.log("[Quest] success create", result)
+        if (form) form.reset();
+        if (preview) preview.classList.add('hidden');
+        if (preview) preview.src = '';
+        if (btn) btn.classList.remove('hidden');
+        if (progress) progress.classList.add('hidden');
+        window.location.href = `/quest-studio/${encodeURIComponent(result.quest)}`;
+    } catch (e) {
+        console.error("[Quest] error create", e);
+        if (btn) btn.classList.remove('hidden');
+        if (progress) progress.classList.add('hidden');
+    }
+}
+
 export { 
     initMain,
+    initMainStudio,
     getQuest,
+    getQuestStudio,
     createQuest,
+    createQuestStudioNet,
     startQuest,
-    answerQuest
+    startQuestStudioNet,
+    answerQuest,
+    answerQuestStudioNet
 };

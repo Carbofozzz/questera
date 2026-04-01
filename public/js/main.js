@@ -11,7 +11,14 @@ import {
 } from './core.js';
 
 import { checkPageImpl } from './pages.js';
-import { createQuest, startQuest, answerQuest } from './quests.js';
+import { 
+    createQuest, 
+    startQuest, 
+    answerQuest,
+    createQuestStudioNet,
+    startQuestStudioNet,
+    answerQuestStudioNet
+} from './quests.js';
 
 setCheckPageImpl(checkPageImpl);
 
@@ -26,7 +33,10 @@ const WalletUI = {
     checkPage,
     createQuest,
     startQuest,
-    answerQuest
+    answerQuest,
+    createQuestStudioNet,
+    startQuestStudioNet,
+    answerQuestStudioNet
 };
   
 if (typeof window !== 'undefined') {

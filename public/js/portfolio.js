@@ -1,6 +1,8 @@
 import {
     client,
+    clientStudioNet,
     contractQuests,
+    contractQuestsStudioNet,
     getAddress,
     maskAddress
 } from './core.js';
@@ -28,6 +30,42 @@ async function getStat() {
     try {
         const quests = await client.readContract({
             address: contractQuests,
+            functionName: "get_my_quests_user",
+            args: [50],
+        });
+        const parsed = JSON.parse(quests);
+        const array = Array.isArray(parsed) ? parsed : [];
+        renderCreatedQuests(joinedQuests, array);
+        console.log("[Portfolio] Joined Quests:", array)
+    } catch(error) {
+        console.error('[Portfolio] Joined Quests error:', error);
+        if (joinedQuests) joinedQuests.textContent = 'Something went wrong';
+    }
+}
+
+async function getStatStudio() {
+    if (!clientStudioNet) return;
+    const subtitle = document.getElementById('subtitle');
+    const createdQuests = document.getElementById('createdQuests');
+    const joinedQuests = document.getElementById('joinedQuests');
+    if (subtitle) subtitle.textContent = 'For address: ' + maskAddress(getAddress());
+    try {
+        const quests = await clientStudioNet.readContract({
+            address: contractQuestsStudioNet,
+            functionName: "get_my_quests",
+            args: [50],
+        });
+        const parsed = JSON.parse(quests);
+        const array = Array.isArray(parsed) ? parsed : [];
+        renderCreatedQuests(createdQuests, array);
+        console.log("[Portfolio] Created Quests:", array)
+    } catch(error) {
+        console.error('[Portfolio] Created Quests error:', error);
+        if (createdQuests) createdQuests.textContent = 'Something went wrong';
+    }
+    try {
+        const quests = await clientStudioNet.readContract({
+            address: contractQuestsStudioNet,
             functionName: "get_my_quests_user",
             args: [50],
         });
@@ -76,5 +114,6 @@ function toNumber(value) {
 }
 
 export { 
-    getStat
+    getStat,
+    getStatStudio
 };
