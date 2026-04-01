@@ -1,12 +1,14 @@
 import { createClient } from "https://esm.sh/genlayer-js";
-import { testnetBradbury } from "https://esm.sh/genlayer-js/chains";
+import { testnetBradbury, studionet } from "https://esm.sh/genlayer-js/chains";
 import { TransactionStatus, ExecutionResult } from "https://esm.sh/genlayer-js/types";
 import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.esm.min.js";
 
 let client = null;
+let clientStudioNet = null;
 let inited = false;
 
 let contractQuests = '0x3275099Fe56238F69C5FDaF599f6d474f3939457';
+let contractQuestsStudioNet = '0x451aAd2a08c21B14163ab5Ae66C3Dc99b2C722d9';
 
 const BASE_SEPOLIA_RPC = "https://sepolia.base.org";
 const BASE_SEPOLIA_USDC= "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
@@ -71,9 +73,11 @@ function updateAccount(account) {
     try {
         if (!account) {
             client = null;
+            clientStudioNet = null;
             return;
         }
         client = createClient({ chain: testnetBradbury, account });
+        clientStudioNet = createClient({ chain: studionet, account });
         queueMicrotask(() => checkPage());
         console.error('Success update account', account);
     } catch (error) {
@@ -203,6 +207,11 @@ async function checkGenlayerBradbury() {
     checkNet(net)
 }
 
+async function checkGenlayerStudioNet() {
+    const net = await (await fetch('/api/config/network_studionet')).json();
+    checkNet(net)
+}
+
 async function checkBaseSepolia() {
     const net = await (await fetch('/api/config/network_base_sepolia')).json();
     checkNet(net)
@@ -267,9 +276,11 @@ function requireConnectedOnLoad(){
 
 export {
     client,
+    clientStudioNet,
     TransactionStatus,
     ExecutionResult,
     contractQuests,
+    contractQuestsStudioNet,
     maskAddress,
     getAddress,
     isConnected,
@@ -283,6 +294,7 @@ export {
     setCheckPageImpl,
     fmt,
     checkGenlayerBradbury,
+    checkGenlayerStudioNet,
     checkBaseSepolia,
     getUSDCBalance,
     getUSDC,
