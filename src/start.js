@@ -732,12 +732,13 @@ async function deployContractStudioNet(relayer, quests, bridge_in, bridge_out, c
     args: [relayer, quests, bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool],
     leaderOnly: false,
   });
-  console.log('Quest tx on Bradbury:', hash);
+  console.log('Quest tx on Studionet:', hash);
   const receipt = await genLayerClientStudioNet.waitForTransactionReceipt({
     hash,
     status: TransactionStatus.ACCEPTED,
     retries: 200,
     interval: 5000,
   });
-  return receipt.txDataDecoded?.contractAddress;
+  console.log('Quest tx on Studionet:', receipt);
+  return receipt.data?.contract_address;
 }
