@@ -720,7 +720,7 @@ async function deployContract(relayer, quests, bridge_in, bridge_out, creator, e
     retries: 200,
     interval: 5000,
   });
-  return receipt.txDataDecoded?.contractAddress;
+  return receipt.data?.contract_address ?? receipt.txDataDecoded?.contractAddress;
 }
 
 async function deployContractStudioNet(relayer, quests, bridge_in, bridge_out, creator, escrow, title, desc, image, prompt, end_date, pool) {
