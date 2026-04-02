@@ -603,6 +603,7 @@ function getQuestPageStudioNet(req) {
           <article id="questContent" class="quest-main card hidden">
             <div class="quest-main__top">
               <div>
+                <p>StudioNet</p>
                 <h1 id="questTitle" class="quest-main__title">Loading...</h1>
                 <p class="quest-main__date">Expiration: <span id="questDate">—</span></p>
               </div>
