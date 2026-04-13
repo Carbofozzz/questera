@@ -513,6 +513,8 @@ async function getQuestStudio(id) {
         const nowSec = Math.floor(Date.now() / 1000);
         const isExpired = q.endSec <= nowSec;
         const isDisabled = !q.isActiveBool;
+        console.log("isExpired", isExpired);
+        console.log("isDisabled", isDisabled);
 
         if (titleEl) titleEl.textContent = q.title || 'Untitled';
         if (descEl) descEl.textContent = q.desc || '';
@@ -526,7 +528,7 @@ async function getQuestStudio(id) {
 
         if (poolTotalEl) poolTotalEl.textContent = q.pool + ' USDC';
 
-        if (isDisabled) {
+        if (isDisabled || isExpired) {
             if (questImg) questImg.classList.remove('hidden');
             if (narrationEl) narrationEl.classList.add('hidden');
             if (taskEl) taskEl.classList.add('hidden');
