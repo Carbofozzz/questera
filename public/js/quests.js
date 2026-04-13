@@ -779,7 +779,11 @@ async function checkEscrow(escrow, creator, isExpired) {
             if (poolCommentEl) poolCommentEl.textContent = 'The funds have been reserved';
         } else {
             if (participants == 0) {
-                if (poolCommentEl) poolCommentEl.textContent = 'Available for refund';
+                if (!refunded) {
+                    if (poolCommentEl) poolCommentEl.textContent = 'Available for refund';
+                } else {
+                    if (poolCommentEl) poolCommentEl.textContent = 'The deposit has been refunded';
+                }
                 if (!refunded && owner) {
                     renderPoolAction({
                         text: 'Refund',
